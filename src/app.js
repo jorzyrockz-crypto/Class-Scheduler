@@ -1105,10 +1105,22 @@
             showToast("New relative time slot row inserted successfully!");
         };
 
+        const updateDashboardStats = () => {
+            const gradeEl = document.getElementById('dash-stat-grades');
+            const teacherEl = document.getElementById('dash-stat-teachers');
+            const subEl = document.getElementById('dash-stat-subjects');
+
+            if (gradeEl) gradeEl.innerText = workspaceState.grades ? workspaceState.grades.length : 0;
+            if (teacherEl) teacherEl.innerText = workspaceState.teachers ? workspaceState.teachers.length : 0;
+            if (subEl) subEl.innerText = workspaceState.subjects ? workspaceState.subjects.length : 0;
+            // Status remains static 100% per user request
+        };
+
         const renderAll = () => {
             const suspendedAvatars = document.querySelectorAll('#touch-drag-avatar');
             suspendedAvatars.forEach(av => av.remove());
 
+            updateDashboardStats();
             renderPrintDOM();
             renderDynamicHeaders();
             renderAutopopulatePanel(); 
