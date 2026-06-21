@@ -1,0 +1,16 @@
+{
+  "name": "Class Scheduler",
+  "short_name": "Scheduler",
+  "description": "Collaborative Class Program Matrix",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
