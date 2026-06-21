@@ -3186,6 +3186,15 @@
                         console.log('ServiceWorker registration failed: ', err);
                     });
             });
+
+            // Reload page when the new service worker takes over (skipWaiting + claim)
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {

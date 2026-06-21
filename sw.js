@@ -1,9 +1,14 @@
-const CACHE_NAME = 'class-scheduler-v1';
+const CACHE_NAME = 'class-scheduler-v1.1.2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  './src/firebase-init.js',
+  './src/state.js',
+  './src/app.js',
+  './src/ui-handlers.js',
+  './src/saved-schedules.js'
 ];
 
 self.addEventListener('install', (event) => {
