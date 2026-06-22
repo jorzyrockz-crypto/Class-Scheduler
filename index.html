@@ -375,11 +375,10 @@
                 <!-- SAVED SCHEDULES SECTION -->
                 <div id="saved-schedules-section" class="mt-6 flex-1 flex flex-col min-h-0 overflow-hidden transition-opacity duration-300">
                     <div class="flex items-center justify-between px-2 mb-2">
-                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Projects</div>
-                        <div class="flex gap-1">
-                            <button class="text-slate-400 hover:text-slate-600 transition-colors" title="Filter"><i data-lucide="filter" class="w-3.5 h-3.5"></i></button>
-                            <button class="text-slate-400 hover:text-slate-600 transition-colors" title="New Folder"><i data-lucide="folder-plus" class="w-3.5 h-3.5"></i></button>
-                        </div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">School Years</div>
+                        <button onclick="window.openNewSYModal()" class="text-slate-400 hover:text-emerald-600 transition-colors" title="New School Year">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        </button>
                     </div>
                     
                     <button class="flex items-center justify-center gap-2 w-full py-1.5 px-3 mb-3 text-xs font-semibold rounded border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shrink-0">
@@ -426,10 +425,28 @@
 
                     <!-- Left Side Content -->
                     <div class="relative z-10 max-w-xl">
-                        <!-- Badge -->
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100/70 text-emerald-800 text-xs font-bold mb-6">
-                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
-                            School Year 2026–2027
+                        <!-- School Year Dropdown Badge -->
+                        <div class="relative inline-block mb-6" id="sy-dropdown-wrapper">
+                            <button onclick="window.toggleSYDropdown()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100/70 hover:bg-emerald-200/80 text-emerald-800 text-xs font-bold transition-all group">
+                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                                <span id="dash-sy-badge">School Year</span>
+                                <i data-lucide="chevron-down" class="w-3 h-3 opacity-60 group-hover:opacity-100 transition-transform duration-200" id="sy-dropdown-chevron"></i>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div id="sy-dropdown-menu" class="hidden absolute top-full left-0 mt-2 w-64 bg-white rounded-xl border border-slate-200 shadow-xl z-50 overflow-hidden">
+                                <div class="px-3 py-2 border-b border-slate-100">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Switch School Year</p>
+                                </div>
+                                <div id="sy-dropdown-list" class="max-h-48 overflow-y-auto py-1">
+                                    <!-- Populated by JS -->
+                                </div>
+                                <div class="border-t border-slate-100 p-2">
+                                    <button onclick="window.openNewSYModal()" class="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors">
+                                        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                        Create New School Year
+                                    </button>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Headlines -->
@@ -532,6 +549,17 @@
                 </div>
                 <div id="teachers-dashboard-grid" class="flex flex-col gap-4">
                     <!-- Populated dynamically by window.renderTeacherDashboard() -->
+                    <!-- Empty State -->
+                    <div id="teachers-empty-state" class="hidden flex-col items-center justify-center py-24 text-center">
+                        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                            <i data-lucide="users" class="w-8 h-8 text-slate-300"></i>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-600 mb-1">No teachers yet</h3>
+                        <p class="text-sm text-slate-400 mb-5">Add your first teacher to get started.</p>
+                        <button onclick="window.openTeacherModal()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all hover:-translate-y-0.5 text-xs mx-auto">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add New Teacher
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -686,9 +714,60 @@
                             <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Region</label><input type="text" id="cfg-region" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none" onchange="updateSchoolConfig('region', this.value)"></div>
                             <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Division</label><input type="text" id="cfg-division" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none" onchange="updateSchoolConfig('division', this.value)"></div>
                             <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">District</label><input type="text" id="cfg-district" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none" onchange="updateSchoolConfig('district', this.value)"></div>
-                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">School Year</label><input type="text" id="cfg-sy" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none" onchange="updateSchoolConfig('schoolYear', this.value)"></div>
+                            <div class="flex gap-1 items-end">
+                                <div class="flex-1">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">School Year</label>
+                                    <input type="text" id="cfg-sy" readonly class="w-full bg-slate-100 border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none text-slate-600 font-bold cursor-not-allowed" title="Use the School Year switcher to change years">
+                                </div>
+                                <button onclick="window.openNewSYModal()" class="shrink-0 px-2 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg transition flex items-center gap-1" title="Switch or create school year">
+                                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Switch
+                                </button>
+                            </div>
                             <div class="col-span-2"><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">School Name</label><input type="text" id="cfg-schoolName" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none font-bold uppercase" onchange="updateSchoolConfig('schoolName', this.value)"></div>
                             <div class="col-span-2"><label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">School Address</label><input type="text" id="cfg-schoolAddress" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none" onchange="updateSchoolConfig('schoolAddress', this.value)"></div>
+                            
+                            <!-- School ID -->
+                            <div class="col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">School ID</label>
+                                <input type="text" id="cfg-schoolId" placeholder="e.g. 123456" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none font-semibold" onchange="updateSchoolConfig('schoolId', this.value)">
+                            </div>
+
+                            <!-- School Category -->
+                            <div class="col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">School Category</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                                        <input type="checkbox" id="cfg-cat-k" value="K" class="w-3.5 h-3.5 accent-emerald-600 cursor-pointer" onchange="updateSchoolCategory()">
+                                        <span class="text-[11px] font-bold text-slate-600 group-hover:text-emerald-700 transition">K</span>
+                                        <span class="text-[10px] text-slate-400">Kinder</span>
+                                    </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                                        <input type="checkbox" id="cfg-cat-es" value="ES" class="w-3.5 h-3.5 accent-emerald-600 cursor-pointer" onchange="updateSchoolCategory()">
+                                        <span class="text-[11px] font-bold text-slate-600 group-hover:text-emerald-700 transition">ES</span>
+                                        <span class="text-[10px] text-slate-400">Elementary</span>
+                                    </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                                        <input type="checkbox" id="cfg-cat-jhs" value="JHS" class="w-3.5 h-3.5 accent-emerald-600 cursor-pointer" onchange="updateSchoolCategory()">
+                                        <span class="text-[11px] font-bold text-slate-600 group-hover:text-emerald-700 transition">JHS</span>
+                                        <span class="text-[10px] text-slate-400">Junior High School</span>
+                                    </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                                        <input type="checkbox" id="cfg-cat-shs" value="SHS" class="w-3.5 h-3.5 accent-emerald-600 cursor-pointer" onchange="updateSchoolCategory()">
+                                        <span class="text-[11px] font-bold text-slate-600 group-hover:text-emerald-700 transition">SHS</span>
+                                        <span class="text-[10px] text-slate-400">Senior High School</span>
+                                    </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                                        <input type="checkbox" id="cfg-cat-is" value="IS" class="w-3.5 h-3.5 accent-emerald-600 cursor-pointer" onchange="updateSchoolCategory()">
+                                        <span class="text-[11px] font-bold text-slate-600 group-hover:text-emerald-700 transition">IS</span>
+                                        <span class="text-[10px] text-slate-400">Integrated School</span>
+                                    </label>
+                                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                                        <input type="checkbox" id="cfg-cat-ps" value="PS" class="w-3.5 h-3.5 accent-emerald-600 cursor-pointer" onchange="updateSchoolCategory()">
+                                        <span class="text-[11px] font-bold text-slate-600 group-hover:text-emerald-700 transition">PS</span>
+                                        <span class="text-[10px] text-slate-400">Primary School</span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                         
                         <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-2 mb-1 border-t border-slate-200 pt-3">Document Logos</h4>
@@ -707,20 +786,20 @@
                             <i data-lucide="pen-tool" class="w-4 h-4 text-amber-500"></i> Signatories (Print Footer)
                         </h4>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Recommended By - Name</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">School Head - Name</label>
                             <input type="text" id="cfg-sig1-name" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none uppercase font-bold" onchange="updateSchoolConfig('signatory1Name', this.value)">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Recommended By - Title</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">School Head - Title</label>
                             <input type="text" id="cfg-sig1-title" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none" onchange="updateSchoolConfig('signatory1Title', this.value)">
                         </div>
                         <div class="border-t border-slate-200 pt-3 mt-1"></div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Approved By - Name</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">PSDS - Name</label>
                             <input type="text" id="cfg-sig2-name" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none uppercase font-bold" onchange="updateSchoolConfig('signatory2Name', this.value)">
                         </div>
                         <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Approved By - Title</label>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">PSDS - Title</label>
                             <input type="text" id="cfg-sig2-title" class="w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs focus:outline-none" onchange="updateSchoolConfig('signatory2Title', this.value)">
                         </div>
                     </div>
@@ -1167,5 +1246,182 @@
     <script defer src="src/app.js"></script>
     <script defer src="src/ui-handlers.js"></script>
     <script defer src="src/saved-schedules.js"></script>
+    <!-- Teacher Modal: Add / Edit Teacher -->
+    <div id="teacher-modal" style="display: none;" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl relative text-slate-800 overflow-hidden">
+
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <h3 id="teacher-modal-title" class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="user-plus" class="w-5 h-5 text-emerald-500"></i>
+                    Add New Teacher
+                </h3>
+                <button onclick="window.closeTeacherModal()" class="text-slate-400 hover:text-slate-600 transition p-1.5 rounded-lg hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <form id="teacher-form" onsubmit="window.handleSaveTeacher(event)" class="px-6 py-5 flex flex-col gap-4">
+                <!-- Hidden ID for edit mode -->
+                <input type="hidden" id="teacher-modal-id">
+
+                <!-- Full Name -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Full Name <span class="text-red-400">*</span></label>
+                    <input
+                        type="text"
+                        id="teacher-modal-name"
+                        required
+                        placeholder="e.g. MARIA SANTOS"
+                        autocomplete="off"
+                        class="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none transition-all text-sm font-semibold uppercase"
+                    >
+                </div>
+
+                <!-- Position / Designation -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Position / Designation</label>
+                    <input
+                        type="text"
+                        id="teacher-modal-position"
+                        placeholder="e.g. Master Teacher I"
+                        autocomplete="off"
+                        class="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none transition-all text-sm font-semibold"
+                    >
+                </div>
+
+                <!-- Color Theme -->
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Signature Color Theme</label>
+                    <div class="grid grid-cols-8 gap-2">
+                        <label class="cursor-pointer" title="Yellow">
+                            <input type="radio" name="teacher-modal-color" value="yellow" checked class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-yellow-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-yellow-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Orange">
+                            <input type="radio" name="teacher-modal-color" value="orange" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-orange-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-orange-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Amber">
+                            <input type="radio" name="teacher-modal-color" value="amber" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-amber-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-amber-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Lime">
+                            <input type="radio" name="teacher-modal-color" value="lime" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-lime-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-lime-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Emerald">
+                            <input type="radio" name="teacher-modal-color" value="emerald" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-emerald-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-emerald-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Teal">
+                            <input type="radio" name="teacher-modal-color" value="teal" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-teal-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-teal-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Cyan">
+                            <input type="radio" name="teacher-modal-color" value="cyan" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-cyan-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-cyan-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Sky Blue">
+                            <input type="radio" name="teacher-modal-color" value="sky" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-sky-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-sky-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Blue">
+                            <input type="radio" name="teacher-modal-color" value="blue" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-blue-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-blue-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Indigo">
+                            <input type="radio" name="teacher-modal-color" value="indigo" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-indigo-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-indigo-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Violet">
+                            <input type="radio" name="teacher-modal-color" value="violet" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-violet-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-violet-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Purple">
+                            <input type="radio" name="teacher-modal-color" value="purple" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-purple-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-purple-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Fuchsia">
+                            <input type="radio" name="teacher-modal-color" value="fuchsia" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-fuchsia-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-fuchsia-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Pink">
+                            <input type="radio" name="teacher-modal-color" value="pink" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-pink-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-pink-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Rose">
+                            <input type="radio" name="teacher-modal-color" value="rose" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-rose-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-rose-400 transition-all hover:scale-110"></span>
+                        </label>
+                        <label class="cursor-pointer" title="Slate">
+                            <input type="radio" name="teacher-modal-color" value="slate" class="sr-only peer">
+                            <span class="block w-full h-6 rounded-lg bg-slate-400 ring-offset-2 peer-checked:ring-2 peer-checked:ring-slate-400 transition-all hover:scale-110"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="window.closeTeacherModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-emerald-700/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        Save Teacher
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- New School Year Modal -->
+    <div id="new-sy-modal" style="display:none;" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <h3 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="calendar-plus" class="w-5 h-5 text-emerald-500"></i>
+                    New School Year
+                </h3>
+                <button onclick="window.closeNewSYModal()" class="text-slate-400 hover:text-slate-600 transition p-1.5 rounded-lg hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="px-6 py-5 flex flex-col gap-4">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">School Year Label <span class="text-red-400">*</span></label>
+                    <input
+                        type="text"
+                        id="new-sy-input"
+                        placeholder="e.g. S.Y. 2027-2028"
+                        autocomplete="off"
+                        class="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none transition-all text-sm font-semibold"
+                    >
+                </div>
+                <!-- Carry-over option -->
+                <label class="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:border-emerald-300 hover:bg-emerald-50/40 transition-all group">
+                    <input type="checkbox" id="new-sy-carryover" class="mt-0.5 w-4 h-4 accent-emerald-600 cursor-pointer shrink-0">
+                    <div>
+                        <p class="text-xs font-bold text-slate-700 group-hover:text-emerald-800 transition-colors">Carry over teachers, subjects &amp; time slots</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Class assignments will start fresh for the new year.</p>
+                    </div>
+                </label>
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-1">
+                    <button type="button" onclick="window.closeNewSYModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="window.createNewSchoolYear()" class="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-emerald-700/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        Create Year
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

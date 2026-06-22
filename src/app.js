@@ -336,6 +336,19 @@
             renderPrintDOM();
         };
 
+        const updateSchoolCategory = () => {
+            const categories = ['k', 'es', 'jhs', 'shs', 'is', 'ps'];
+            const selected = categories
+                .filter(c => {
+                    const el = document.getElementById('cfg-cat-' + c);
+                    return el && el.checked;
+                })
+                .map(c => document.getElementById('cfg-cat-' + c).value);
+            workspaceState.schoolConfig.schoolCategories = selected;
+            saveState();
+        };
+        window.updateSchoolCategory = updateSchoolCategory;
+
         const handleLogoUpload = (e, side) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -1109,11 +1122,140 @@
             const gradeEl = document.getElementById('dash-stat-grades');
             const teacherEl = document.getElementById('dash-stat-teachers');
             const subEl = document.getElementById('dash-stat-subjects');
+            const badgeEl = document.getElementById('dash-sy-badge');
 
             if (gradeEl) gradeEl.innerText = workspaceState.grades ? workspaceState.grades.length : 0;
             if (teacherEl) teacherEl.innerText = workspaceState.teachers ? workspaceState.teachers.length : 0;
             if (subEl) subEl.innerText = workspaceState.subjects ? workspaceState.subjects.length : 0;
             // Status remains static 100% per user request
+
+            // Update the school year badge text
+            const activeYear = workspaceState?.schoolConfig?.schoolYear || 'School Year';
+            if (badgeEl) badgeEl.innerText = activeYear;
+
+            // Refresh the school year dropdown list
+            const dropdownList = document.getElementById('sy-dropdown-list');
+            if (dropdownList) {
+                const years = (window.getAllSchoolYears && window.getAllSchoolYears()) || [];
+                if (years.length === 0) {
+                    dropdownList.innerHTML = `<p class="px-3 py-3 text-[11px] text-slate-400 text-center">No saved years yet.</p>`;
+                } else {
+                    dropdownList.innerHTML = years.map(y => `
+                        <button onclick="window.switchSchoolYear('${y}'); window.closeSYDropdown();"
+                            class="flex items-center gap-2 w-full px-3 py-2 text-xs font-semibold transition-colors text-left ${
+                                y === activeYear
+                                    ? 'bg-emerald-50 text-emerald-800 font-bold'
+                                    : 'text-slate-700 hover:bg-slate-50'
+                            }">
+                            <i data-lucide="${y === activeYear ? 'check-circle-2' : 'circle'}" class="w-3.5 h-3.5 ${y === activeYear ? 'text-emerald-500' : 'text-slate-300'} shrink-0"></i>
+                            ${y}
+                        </button>
+                    `).join('');
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            }
+
+            // Also refresh sidebar school years panel
+            if (typeof window.renderSavedSchedules === 'function') window.renderSavedSchedules();
+        };
+
+        // School Year Dropdown
+        window.toggleSYDropdown = () => {
+            const menu = document.getElementById('sy-dropdown-menu');
+            const chevron = document.getElementById('sy-dropdown-chevron');
+            if (!menu) return;
+            const isOpen = !menu.classList.contains('hidden');
+            if (isOpen) {
+                menu.classList.add('hidden');
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            } else {
+                menu.classList.remove('hidden');
+                if (chevron) chevron.style.transform = 'rotate(180deg)';
+                // Close on outside click
+                setTimeout(() => {
+                    const handler = (e) => {
+                        const wrapper = document.getElementById('sy-dropdown-wrapper');
+                        if (wrapper && !wrapper.contains(e.target)) {
+                            window.closeSYDropdown();
+                            document.removeEventListener('click', handler);
+                        }
+                    };
+                    document.addEventListener('click', handler);
+                }, 10);
+            }
+        };
+
+        window.closeSYDropdown = () => {
+            const menu = document.getElementById('sy-dropdown-menu');
+            const chevron = document.getElementById('sy-dropdown-chevron');
+            if (menu) menu.classList.add('hidden');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        };
+
+        // New School Year Modal
+        window.openNewSYModal = () => {
+            window.closeSYDropdown();
+            const modal = document.getElementById('new-sy-modal');
+            const input = document.getElementById('new-sy-input');
+            const carryover = document.getElementById('new-sy-carryover');
+            if (input) input.value = '';
+            if (carryover) carryover.checked = false;
+            if (modal) {
+                modal.style.display = 'flex';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                setTimeout(() => input && input.focus(), 100);
+            }
+        };
+
+        window.closeNewSYModal = () => {
+            const modal = document.getElementById('new-sy-modal');
+            if (modal) modal.style.display = 'none';
+        };
+
+        window.createNewSchoolYear = () => {
+            const input = document.getElementById('new-sy-input');
+            const carryover = document.getElementById('new-sy-carryover');
+            const year = input ? input.value.trim() : '';
+            if (!year) {
+                if (typeof showToast === 'function') showToast('Please enter a school year label.', 'error');
+                return;
+            }
+            const existingYears = (window.getAllSchoolYears && window.getAllSchoolYears()) || [];
+            if (existingYears.includes(year)) {
+                if (typeof showToast === 'function') showToast('That school year already exists.', 'error');
+                return;
+            }
+
+            // Save current state before switching
+            if (typeof saveState === 'function') saveState();
+
+            // Build new state: blank, optionally carry-over teachers/subjects/timeslots
+            const newState = JSON.parse(JSON.stringify(defaultState));
+            newState.schoolConfig = JSON.parse(JSON.stringify(workspaceState.schoolConfig));
+            newState.schoolConfig.schoolYear = year;
+            newState.classes = [];
+            newState.advisers = {};
+
+            if (carryover && carryover.checked) {
+                newState.teachers = JSON.parse(JSON.stringify(workspaceState.teachers || []));
+                newState.subjects = JSON.parse(JSON.stringify(workspaceState.subjects || []));
+                newState.timeSlots = JSON.parse(JSON.stringify(workspaceState.timeSlots || []));
+                newState.grades = JSON.parse(JSON.stringify(workspaceState.grades || []));
+                newState.sections = JSON.parse(JSON.stringify(workspaceState.sections || []));
+            } else {
+                newState.teachers = [];
+                newState.subjects = [];
+            }
+
+            // Save the new year and switch to it
+            workspaceState = newState;
+            if (typeof saveState === 'function') saveState();
+            localStorage.setItem('last_active_school_year', year);
+
+            window.closeNewSYModal();
+            if (typeof renderAll === 'function') renderAll();
+            if (typeof window.renderSavedSchedules === 'function') window.renderSavedSchedules();
+            if (typeof showToast === 'function') showToast(`School Year "${year}" created!`);
         };
 
         window.renderTeacherDashboard = () => {
@@ -1122,6 +1264,18 @@
             
             // Reconfigure grid layout to vertical list
             grid.className = 'flex flex-col gap-4';
+
+            const emptyState = document.getElementById('teachers-empty-state');
+            const hasTeachers = workspaceState.teachers && workspaceState.teachers.length > 0;
+
+            if (!hasTeachers) {
+                // Only show empty state, clear any teacher cards
+                grid.querySelectorAll('details').forEach(el => el.remove());
+                if (emptyState) emptyState.style.display = 'flex';
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+                return;
+            }
+            if (emptyState) emptyState.style.display = 'none';
             
             const teacherLoads = {};
             if(workspaceState.teachers) {
@@ -1193,7 +1347,10 @@
                 return colors[colorName] || '#94a3b8';
             };
 
-            grid.innerHTML = workspaceState.teachers.map(t => {
+            // Remove old teacher cards but preserve the empty-state div
+            grid.querySelectorAll('details').forEach(el => el.remove());
+
+            const teacherCardsHTML = workspaceState.teachers.map(t => {
                 const data = teacherLoads[t.id];
                 const totalHours = Math.floor(data.mins / 60);
                 const totalMins = data.mins % 60;
@@ -1345,6 +1502,8 @@
                     </details>
                 `;
             }).join('');
+
+            grid.insertAdjacentHTML('beforeend', teacherCardsHTML);
             
             if (typeof lucide !== 'undefined') lucide.createIcons();
         };
@@ -2602,6 +2761,15 @@
                 document.getElementById('cfg-sig1-title').value = workspaceState.schoolConfig.signatory1Title;
                 document.getElementById('cfg-sig2-name').value = workspaceState.schoolConfig.signatory2Name;
                 document.getElementById('cfg-sig2-title').value = workspaceState.schoolConfig.signatory2Title;
+                // Populate School ID
+                const schoolIdEl = document.getElementById('cfg-schoolId');
+                if (schoolIdEl) schoolIdEl.value = workspaceState.schoolConfig.schoolId || '';
+                // Restore School Category checkboxes
+                const savedCats = workspaceState.schoolConfig.schoolCategories || [];
+                ['k', 'es', 'jhs', 'shs', 'is', 'ps'].forEach(c => {
+                    const el = document.getElementById('cfg-cat-' + c);
+                    if (el) el.checked = savedCats.includes(el.value);
+                });
             }
             if (tab === 'timeslots') {
                 document.getElementById('cfg-ripple-cascade').checked = workspaceState.rippleCascadeEnabled !== false;

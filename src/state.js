@@ -323,6 +323,7 @@
             const currentYear = workspaceState?.schoolConfig?.schoolYear || defaultSchoolConfig.schoolYear;
             localStorage.setItem(getStorageKey(currentYear), JSON.stringify(workspaceState));
             localStorage.setItem('last_active_school_year', currentYear);
+            registerSchoolYear(currentYear);
 
             if (window.isCloudConnected && window.currentRoomCode) {
                 window.saveToCloud(window.currentRoomCode, workspaceState);
@@ -366,4 +367,26 @@
             // Update the tracker and fetch the incoming school year state
             localStorage.setItem('last_active_school_year', newYear);
             loadState();
+            if (typeof renderAll === 'function') renderAll();
+            if (typeof window.renderSavedSchedules === 'function') window.renderSavedSchedules();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            if (typeof showToast === 'function') showToast(`Switched to ${newYear}`);
         };
+        window.switchSchoolYear = switchSchoolYear;
+
+        const getAllSchoolYears = () => {
+            try {
+                return JSON.parse(localStorage.getItem('school_years_index') || '[]');
+            } catch { return []; }
+        };
+        window.getAllSchoolYears = getAllSchoolYears;
+
+        const registerSchoolYear = (year) => {
+            if (!year) return;
+            const years = getAllSchoolYears();
+            if (!years.includes(year)) {
+                years.push(year);
+                localStorage.setItem('school_years_index', JSON.stringify(years));
+            }
+        };
+        window.registerSchoolYear = registerSchoolYear;
