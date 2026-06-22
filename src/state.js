@@ -122,10 +122,13 @@
             activeTab: "master", 
             gradelevelFilter: "Grade 4",
             gradelevelDayFilter: "mon",
-            rippleCascadeEnabled: true
+            rippleCascadeEnabled: true,
+            programs: [],
+            activeProgramId: ""
         };
 
         let workspaceState = JSON.parse(JSON.stringify(defaultState));
+        window.workspaceState = workspaceState;
         let draggedBlockId = null;
         let activeQuickMoveId = null;
         let activeResourceTab = 'school'; 
@@ -309,6 +312,90 @@
             if (!state.gradelevelFilter) state.gradelevelFilter = "Grade 4";
             if (!state.gradelevelDayFilter) state.gradelevelDayFilter = "mon";
 
+            // --- CLASS PROGRAM ARCHITECTURE MIGRATION ---
+            if (!state.programs) state.programs = [];
+            if (state.activeProgramId === undefined) state.activeProgramId = "";
+
+            if (state.programs.length === 0) {
+                // Generate default Individual Programs for all sections
+                const individualPrograms = (state.sections || []).map(sec => ({
+                    id: `prog-sec-${sec.id}`,
+                    name: `${sec.grade} - ${sec.name}`,
+                    type: 'individual',
+                    grade: sec.grade,
+                    sectionId: sec.id
+                }));
+
+                // Generate default Multi-Grade Program (Grades 1-2)
+                const secG1 = (state.sections || []).find(s => s.grade === "Grade 1")?.id || "";
+                const secG2 = (state.sections || []).find(s => s.grade === "Grade 2")?.id || "";
+                const multigradeProgram = {
+                    id: 'prog-mg-g12',
+                    name: 'Grades 1 - 2 Combined',
+                    type: 'multigrade',
+                    sectionIds: [secG1, secG2].filter(Boolean)
+                };
+
+                // Generate default Master Programs
+                const masterKinder = {
+                    id: 'prog-master-kinder',
+                    name: 'Master Program (Kindergarten)',
+                    type: 'master',
+                    subProgramIds: (state.sections || []).filter(s => s.grade === "Kindergarten").map(s => `prog-sec-${s.id}`)
+                };
+                const masterG12 = {
+                    id: 'prog-master-g12',
+                    name: 'Master Program (Grades 1 - 2)',
+                    type: 'master',
+                    subProgramIds: ['prog-mg-g12']
+                };
+                const masterG36 = {
+                    id: 'prog-master-g36',
+                    name: 'Master Program (Grades 3 - 6)',
+                    type: 'master',
+                    subProgramIds: (state.sections || []).filter(s => ["Grade 3", "Grade 4", "Grade 5", "Grade 6"].includes(s.grade)).map(s => `prog-sec-${s.id}`)
+                };
+
+                state.programs = [
+                    ...individualPrograms,
+                    multigradeProgram,
+                    masterKinder,
+                    masterG12,
+                    masterG36
+                ];
+
+                // Map legacy classes to programId
+                if (state.classes) {
+                    state.classes.forEach(c => {
+                        if (!c.programId) {
+                            if (c.sectionId) {
+                                c.programId = `prog-sec-${c.sectionId}`;
+                            } else {
+                                // Find section for grade
+                                const sec = (state.sections || []).find(s => s.grade === c.grade);
+                                if (sec) {
+                                    c.sectionId = sec.id;
+                                    c.programId = `prog-sec-${sec.id}`;
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Ensure activeProgramId is set if empty
+            if (!state.activeProgramId) {
+                if (state.activeTab === 'master_kinder') {
+                    state.activeProgramId = 'prog-master-kinder';
+                } else if (state.activeTab === 'master_g12') {
+                    state.activeProgramId = 'prog-master-g12';
+                } else if (state.activeTab === 'master') {
+                    state.activeProgramId = 'prog-master-g36';
+                } else {
+                    state.activeProgramId = state.programs[0]?.id || "";
+                }
+            }
+
             return state;
         };
 
@@ -356,7 +443,37 @@
             
             // Ensure the active school year is set in the config
             workspaceState.schoolConfig.schoolYear = lastActiveYear;
+            window.workspaceState = workspaceState;
         };
+
+        const switchClassProgram = (programId) => {
+            if (!workspaceState) return;
+            const program = workspaceState.programs.find(p => p.id === programId);
+            if (!program) return;
+            workspaceState.activeProgramId = programId;
+            // Also synchronize activeTab so that legacy parts of the system don't break
+            if (programId === 'prog-master-kinder') {
+                workspaceState.activeTab = 'master_kinder';
+            } else if (programId === 'prog-master-g12') {
+                workspaceState.activeTab = 'master_g12';
+            } else if (programId === 'prog-master-g36') {
+                workspaceState.activeTab = 'master';
+            } else {
+                workspaceState.activeTab = 'program';
+            }
+            saveState();
+            
+            // Auto switch navigation view if we are on summary or dashboard
+            if (window.currentView !== 'schedule') {
+                if (typeof window.setMainView === 'function') window.setMainView('schedule');
+            }
+            
+            if (typeof renderAll === 'function') renderAll();
+            if (typeof window.renderSavedSchedules === 'function') window.renderSavedSchedules();
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            if (typeof showToast === 'function') showToast(`Switched program to ${program.name}`);
+        };
+        window.switchClassProgram = switchClassProgram;
 
         const switchSchoolYear = (newYear) => {
             // Save current progress to the outgoing school year

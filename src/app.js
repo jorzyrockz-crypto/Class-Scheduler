@@ -404,6 +404,9 @@
             if (!block.timeSlotId || block.day === 'pool') return false;
             const duplicateBlocks = workspaceState.classes.filter(c => {
                 if (c.id === block.id || c.day !== block.day || c.timeSlotId !== block.timeSlotId) return false;
+                if (block.programId && c.programId) {
+                    return c.programId === block.programId && c.subjectId === block.subjectId;
+                }
                 if (block.day === 'master') {
                     return c.grade === block.grade && c.subjectId === block.subjectId;
                 } else {
@@ -444,7 +447,16 @@
             scheduled.forEach(c1 => {
                 scheduled.forEach(c2 => {
                     if (c1.id !== c2.id && c1.day === c2.day && c1.timeSlotId === c2.timeSlotId) {
-                        if (c1.day === 'master' && c1.grade === c2.grade && c1.subjectId === c2.subjectId) {
+                        if (c1.programId && c2.programId && c1.programId === c2.programId && c1.subjectId === c2.subjectId) {
+                            const subject = workspaceState.subjects.find(s => s.id === c1.subjectId);
+                            const subName = subject ? subject.name : "Unknown";
+                            const prog = workspaceState.programs.find(p => p.id === c1.programId);
+                            const progName = prog ? prog.name : "Unknown Program";
+                            const conflictMsg = `Overlap: Duplicate Subject "${subName}" scheduled for Program "${progName}" during the same slot.`;
+                            if (!conflicts.some(x => x.msg === conflictMsg)) {
+                                conflicts.push({ type: 'warning', msg: conflictMsg });
+                            }
+                        } else if (c1.day === 'master' && c1.grade === c2.grade && c1.subjectId === c2.subjectId) {
                             const subject = workspaceState.subjects.find(s => s.id === c1.subjectId);
                             const subName = subject ? subject.name : "Unknown";
                             const conflictMsg = `Overlap: Duplicate Subject "${subName}" scheduled for ${c1.grade} during the same slot.`;
@@ -587,6 +599,9 @@
                 titleEl.innerText = `MASTER CLASS PROGRAM (GRADES 3 - 6)`;
             } else if (workspaceState.activeTab === 'summary') {
                 titleEl.innerText = `TEACHING LOAD SUMMARY REPORT`;
+            } else if (workspaceState.activeTab === 'program') {
+                const prog = workspaceState.programs.find(p => p.id === workspaceState.activeProgramId);
+                titleEl.innerText = prog ? prog.name.toUpperCase() : "CLASS PROGRAM";
             } else {
                 const filter = workspaceState.gradelevelFilter;
                 titleEl.innerText = `CLASS PROGRAM FOR ${filter}`;
@@ -634,11 +649,25 @@
             });
             
             const filterBar = document.getElementById('gradelevel-selector-bar');
+            const gradeFilterSelect = document.getElementById('gradelevel-filter-select');
+            const dayFilterSelect = document.getElementById('gradelevel-day-select');
+            
             if (tab === 'gradelevel') {
-                filterBar.classList.remove('hidden');
+                if (filterBar) filterBar.classList.remove('hidden');
+                if (gradeFilterSelect) gradeFilterSelect.style.display = 'block';
+                if (dayFilterSelect) dayFilterSelect.style.display = 'block';
                 populateGradelevelFilters();
+            } else if (tab === 'program') {
+                const prog = workspaceState.programs.find(p => p.id === workspaceState.activeProgramId);
+                if (prog && prog.type === 'master') {
+                    if (filterBar) filterBar.classList.remove('hidden');
+                    if (gradeFilterSelect) gradeFilterSelect.style.display = 'none';
+                    if (dayFilterSelect) dayFilterSelect.style.display = 'block';
+                } else {
+                    if (filterBar) filterBar.classList.add('hidden');
+                }
             } else {
-                filterBar.classList.add('hidden');
+                if (filterBar) filterBar.classList.add('hidden');
             }
 
             const sidebar = document.getElementById('sidebar-container');
@@ -1005,21 +1034,41 @@
             const isMasterG12 = workspaceState.activeTab === 'master_g12';
             const isMasterG36 = workspaceState.activeTab === 'master';
             
+            let grade = '';
+            
             if (isMasterKinder) {
                 return workspaceState.timeSlots.filter(ts => ts.group === 'kinder');
             } else if (isMasterG12) {
                 return workspaceState.timeSlots.filter(ts => ts.group === 'all' || ts.group === 'g12');
             } else if (isMasterG36) {
                 return workspaceState.timeSlots.filter(ts => (ts.group === 'all' || ts.group === 'g36'));
-            } else {
-                const filterGrade = workspaceState.gradelevelFilter;
-                if (filterGrade === "Kindergarten") {
-                    return workspaceState.timeSlots.filter(ts => ts.group === 'kinder');
-                } else if (filterGrade === "Grade 1" || filterGrade === "Grade 2") {
-                    return workspaceState.timeSlots.filter(ts => ts.group === 'all' || ts.group === 'g12');
-                } else {
-                    return workspaceState.timeSlots.filter(ts => (ts.group === 'all' || ts.group === 'g36'));
+            } else if (workspaceState.activeTab === 'program') {
+                const prog = workspaceState.programs.find(p => p.id === workspaceState.activeProgramId);
+                if (prog) {
+                    if (prog.type === 'individual') {
+                        grade = prog.grade;
+                    } else if (prog.type === 'multigrade') {
+                        const sec = workspaceState.sections.find(s => s.id === prog.sectionIds?.[0]);
+                        grade = sec ? sec.grade : 'Grade 1';
+                    } else if (prog.type === 'master') {
+                        const sub = workspaceState.programs.find(p => p.id === prog.subProgramIds?.[0]);
+                        if (sub) {
+                            grade = sub.grade || workspaceState.sections.find(s => s.id === sub.sectionIds?.[0])?.grade;
+                        }
+                    }
                 }
+            } else {
+                grade = workspaceState.gradelevelFilter;
+            }
+            
+            if (!grade) grade = 'Grade 4';
+            
+            if (grade === "Kindergarten") {
+                return workspaceState.timeSlots.filter(ts => ts.group === 'kinder');
+            } else if (grade === "Grade 1" || grade === "Grade 2") {
+                return workspaceState.timeSlots.filter(ts => ts.group === 'all' || ts.group === 'g12');
+            } else {
+                return workspaceState.timeSlots.filter(ts => (ts.group === 'all' || ts.group === 'g36'));
             }
         };
 
@@ -1675,7 +1724,16 @@
                     if (isMasterKinder) colCount = 1;
                     else if (isMasterG12) colCount = 2;
                     else if (isMasterG36) colCount = 4;
-                    else {
+                    else if (workspaceState.activeTab === 'program') {
+                        const prog = workspaceState.programs.find(p => p.id === workspaceState.activeProgramId);
+                        if (prog) {
+                            if (prog.type === 'individual' || prog.type === 'multigrade') {
+                                colCount = 5;
+                            } else if (prog.type === 'master') {
+                                colCount = (prog.subProgramIds || []).length || 1;
+                            }
+                        }
+                    } else {
                         colCount = workspaceState.sections.filter(sec => sec.grade === gradeFilter).length || 1;
                     }
 
@@ -1774,6 +1832,83 @@
 
                             tr.appendChild(tdCell);
                         });
+                    } else if (workspaceState.activeTab === 'program') {
+                        const prog = workspaceState.programs.find(p => p.id === workspaceState.activeProgramId);
+                        if (prog && (prog.type === 'individual' || prog.type === 'multigrade')) {
+                            // Weekly Schedule View: Mon-Fri columns
+                            const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
+                            days.forEach(day => {
+                                const tdCell = document.createElement('td');
+                                tdCell.className = "p-2 border-r border-slate-200 align-middle h-24 transition-all duration-200";
+                                tdCell.style.width = `20%`;
+                                tdCell.dataset.programId = prog.id;
+                                tdCell.dataset.day = day;
+                                tdCell.dataset.slotId = slot.id;
+
+                                const block = workspaceState.classes.find(c => 
+                                    c.programId === prog.id && 
+                                    c.day === day && 
+                                    c.timeSlotId === slot.id
+                                );
+
+                                if (block) {
+                                    tdCell.appendChild(createDragBlock(block));
+                                } else {
+                                    tdCell.innerHTML = `<div class="w-full h-full min-h-[60px] border border-dashed border-slate-150 rounded-xl hover:border-slate-300 transition-colors cursor-pointer flex items-center justify-center text-[10px] text-slate-350 select-none hover:text-slate-500 font-bold print:border-none print:text-transparent" onclick="openCreateModalAtProgramDay('${prog.id}', '${day}', '${slot.id}')">Empty Slot</div>`;
+                                }
+
+                                tdCell.addEventListener('dragover', (e) => { e.preventDefault(); tdCell.classList.add('drag-over-active'); });
+                                tdCell.addEventListener('dragleave', () => { tdCell.classList.remove('drag-over-active'); });
+                                tdCell.addEventListener('drop', (e) => {
+                                    e.preventDefault();
+                                    tdCell.classList.remove('drag-over-active');
+                                    if (draggedBlockId) executeDragMoveProgramDay(draggedBlockId, prog.id, day, slot.id);
+                                });
+
+                                tr.appendChild(tdCell);
+                            });
+                        } else if (prog && prog.type === 'master') {
+                            // Master Program View: Combined Sub-programs columns
+                            const subProgs = (prog.subProgramIds || []).map(sid => workspaceState.programs.find(p => p.id === sid)).filter(Boolean);
+                            if (subProgs.length === 0) {
+                                const tdEmpty = document.createElement('td');
+                                tdEmpty.className = "p-4 text-center text-xs text-slate-400 bg-slate-50 italic font-semibold";
+                                tdEmpty.colSpan = 1;
+                                tdEmpty.innerText = "No sub-programs combined.";
+                                tr.appendChild(tdEmpty);
+                            } else {
+                                subProgs.forEach(sub => {
+                                    const tdCell = document.createElement('td');
+                                    tdCell.className = "p-2 border-r border-slate-200 align-middle h-24 transition-all duration-200";
+                                    tdCell.style.width = `${100 / subProgs.length}%`;
+                                    tdCell.dataset.programId = sub.id;
+                                    tdCell.dataset.day = dayFilter;
+                                    tdCell.dataset.slotId = slot.id;
+
+                                    const block = workspaceState.classes.find(c => 
+                                        c.programId === sub.id && 
+                                        c.day === dayFilter && 
+                                        c.timeSlotId === slot.id
+                                    );
+
+                                    if (block) {
+                                        tdCell.appendChild(createDragBlock(block));
+                                    } else {
+                                        tdCell.innerHTML = `<div class="w-full h-full min-h-[60px] border border-dashed border-slate-150 rounded-xl hover:border-slate-300 transition-colors cursor-pointer flex items-center justify-center text-[10px] text-slate-350 select-none hover:text-slate-500 font-bold print:border-none print:text-transparent" onclick="openCreateModalAtProgramDay('${sub.id}', '${dayFilter}', '${slot.id}')">Empty Slot</div>`;
+                                    }
+
+                                    tdCell.addEventListener('dragover', (e) => { e.preventDefault(); tdCell.classList.add('drag-over-active'); });
+                                    tdCell.addEventListener('dragleave', () => { tdCell.classList.remove('drag-over-active'); });
+                                    tdCell.addEventListener('drop', (e) => {
+                                        e.preventDefault();
+                                        tdCell.classList.remove('drag-over-active');
+                                        if (draggedBlockId) executeDragMoveProgramDay(draggedBlockId, sub.id, dayFilter, slot.id);
+                                    });
+
+                                    tr.appendChild(tdCell);
+                                });
+                            }
+                        }
                     } else {
                         const activeSections = workspaceState.sections.filter(sec => sec.grade === gradeFilter);
 
@@ -2151,6 +2286,51 @@
                         `;
                         tr.appendChild(th);
                     });
+                } else if (workspaceState.activeTab === 'program') {
+                    const prog = workspaceState.programs.find(p => p.id === workspaceState.activeProgramId);
+                    if (prog && (prog.type === 'individual' || prog.type === 'multigrade')) {
+                        const days = [
+                            { key: 'mon', label: 'MONDAY' },
+                            { key: 'tue', label: 'TUESDAY' },
+                            { key: 'wed', label: 'WEDNESDAY' },
+                            { key: 'thu', label: 'THURSDAY' },
+                            { key: 'fri', label: 'FRIDAY' }
+                        ];
+                        days.forEach(day => {
+                            const th = document.createElement('th');
+                            th.className = "p-3 border-r border-slate-200 text-center font-bold text-xs";
+                            th.style.width = `20%`;
+                            th.innerText = day.label;
+                            tr.appendChild(th);
+                        });
+                    } else if (prog && prog.type === 'master') {
+                        const subProgs = (prog.subProgramIds || []).map(sid => workspaceState.programs.find(p => p.id === sid)).filter(Boolean);
+                        if (subProgs.length === 0) {
+                            const th = document.createElement('th');
+                            th.className = "p-3 text-center text-slate-400 italic font-bold text-xs";
+                            th.innerText = "No sub-programs combined";
+                            tr.appendChild(th);
+                        } else {
+                            subProgs.forEach(sub => {
+                                const th = document.createElement('th');
+                                th.className = "p-3 border-r border-slate-200 text-center font-bold text-xs";
+                                th.style.width = `${100 / subProgs.length}%`;
+                                
+                                let adviserName = "";
+                                if (sub.type === 'individual' && sub.grade) {
+                                    const adviserId = workspaceState.advisers[sub.grade];
+                                    const adviserTeacher = workspaceState.teachers.find(t => t.id === adviserId);
+                                    if (adviserTeacher) adviserName = `Adviser: ${adviserTeacher.name}`;
+                                }
+                                
+                                th.innerHTML = `
+                                    ${escapeHtml(sub.name)}
+                                    ${adviserName ? `<div class="text-[10px] font-normal text-slate-500 capitalize print:font-serif print:text-black font-semibold">${escapeHtml(adviserName)}</div>` : ''}
+                                `;
+                                tr.appendChild(th);
+                            });
+                        }
+                    }
                 } else {
                     const activeSections = workspaceState.sections.filter(sec => sec.grade === workspaceState.gradelevelFilter);
                     if (activeSections.length === 0) {
@@ -2163,6 +2343,7 @@
                             const th = document.createElement('th');
                             th.className = "p-3 border-r border-slate-200 text-center text-xs uppercase font-bold";
                             th.style.width = `${100 / activeSections.length}%`;
+                            th.innerText = sec.name;
                             tr.appendChild(th);
                         });
                     }
@@ -2299,6 +2480,30 @@
             const targetTimeSlot = activeSlots.length > 0 ? activeSlots[0].id : "";
 
             setupCreateModalValues(targetDay, targetGrade, targetSection, targetTimeSlot);
+            document.getElementById('create-modal').style.display = 'flex';
+        };
+
+        const openCreateModalAtProgramDay = (programId, day, slotId) => {
+            populateSelects('create');
+            
+            const prog = workspaceState.programs.find(p => p.id === programId);
+            if (!prog) return;
+            
+            window.createModalProgramId = programId;
+            
+            let grade = '';
+            let sectionId = '';
+            
+            if (prog.type === 'individual') {
+                grade = prog.grade;
+                sectionId = prog.sectionId;
+            } else if (prog.type === 'multigrade') {
+                const sec = workspaceState.sections.find(s => s.id === prog.sectionIds?.[0]);
+                grade = sec ? sec.grade : '';
+                sectionId = prog.sectionIds?.[0] || '';
+            }
+            
+            setupCreateModalValues(day, grade, sectionId, slotId);
             document.getElementById('create-modal').style.display = 'flex';
         };
 
@@ -2619,6 +2824,43 @@
             }
             draggedBlockId = null;
         };
+        window.executeDragMoveSection = executeDragMoveSection;
+
+        const executeDragMoveProgramDay = (blockId, programId, day, slotId) => {
+            const block = workspaceState.classes.find(c => c.id === blockId);
+            const targetProg = workspaceState.programs.find(p => p.id === programId);
+            if (block && targetProg) {
+                const displaced = workspaceState.classes.find(c => 
+                    c.id !== blockId && 
+                    c.programId === programId && 
+                    c.day === day && 
+                    c.timeSlotId === slotId
+                );
+                if (displaced) {
+                    workspaceState.classes = workspaceState.classes.filter(c => c.id !== displaced.id);
+                    showToast(`Displaced block was removed`);
+                }
+                
+                block.programId = programId;
+                block.day = day;
+                block.timeSlotId = slotId;
+                
+                if (targetProg.type === 'individual') {
+                    block.grade = targetProg.grade;
+                    block.sectionId = targetProg.sectionId;
+                } else if (targetProg.type === 'multigrade') {
+                    const sec = workspaceState.sections.find(s => s.id === targetProg.sectionIds?.[0]);
+                    block.grade = sec ? sec.grade : '';
+                    block.sectionId = targetProg.sectionIds?.[0] || '';
+                }
+                
+                saveState();
+                renderAll();
+                showToast("Schedule updated!");
+            }
+            draggedBlockId = null;
+        };
+        window.executeDragMoveProgramDay = executeDragMoveProgramDay;
 
         const exportData = () => {
             try {
@@ -2672,8 +2914,26 @@
             const grade = document.getElementById('create-grade-hidden').value;
             const sectionId = document.getElementById('create-section-hidden').value;
 
+            let programId = window.createModalProgramId || '';
+            window.createModalProgramId = null;
+
+            if (!programId && workspaceState.activeTab === 'program') {
+                programId = workspaceState.activeProgramId;
+            }
+            if (!programId) {
+                if (sectionId) {
+                    programId = `prog-sec-${sectionId}`;
+                } else if (grade) {
+                    const sec = workspaceState.sections.find(s => s.grade === grade);
+                    if (sec) programId = `prog-sec-${sec.id}`;
+                }
+            }
+
             if (timeSlotId) {
                 const displaced = workspaceState.classes.find(c => {
+                    if (programId) {
+                        return c.programId === programId && c.day === day && c.timeSlotId === timeSlotId;
+                    }
                     if (day === 'master') {
                         return c.day === 'master' && c.timeSlotId === timeSlotId && c.grade === grade;
                     } else {
@@ -2686,7 +2946,7 @@
                 }
             }
 
-            const newBlock = { id: generateId('c'), subjectId, grade, sectionId, teacherId, timeSlotId, day };
+            const newBlock = { id: generateId('c'), subjectId, grade, sectionId, teacherId, timeSlotId, day, programId };
             workspaceState.classes.push(newBlock);
             
             saveState();
@@ -3616,6 +3876,7 @@
         window.cancelDirectTimeSlotInline = cancelDirectTimeSlotInline;
         window.saveDirectTimeSlotInline = saveDirectTimeSlotInline;
         window.appendFloatingTimeSlotNext = appendFloatingTimeSlotNext;
+        window.openCreateModalAtProgramDay = openCreateModalAtProgramDay;
         window.openCreateModalAtMaster = openCreateModalAtMaster;
         window.openCreateModalAtSection = openCreateModalAtSection;
         window.openPopover = openPopover;

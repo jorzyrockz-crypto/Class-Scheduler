@@ -381,8 +381,8 @@
                         </button>
                     </div>
                     
-                    <button class="flex items-center justify-center gap-2 w-full py-1.5 px-3 mb-3 text-xs font-semibold rounded border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shrink-0">
-                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Save Schedule
+                    <button onclick="window.openCreateProgramModal()" class="flex items-center justify-center gap-2 w-full py-1.5 px-3 mb-3 text-xs font-semibold rounded border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shrink-0">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> New Class Program
                     </button>
 
                     <!-- Tree Container -->
@@ -1417,6 +1417,98 @@
                     <button type="button" onclick="window.createNewSchoolYear()" class="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-emerald-700/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i>
                         Create Year
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create / Edit Class Program Modal -->
+    <div id="create-program-modal" style="display:none;" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden text-slate-800">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                <h3 id="create-program-modal-title" class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                    <i data-lucide="file-plus" class="w-5 h-5 text-emerald-500"></i>
+                    Create Class Program
+                </h3>
+                <button onclick="window.closeCreateProgramModal()" class="text-slate-400 hover:text-slate-600 transition p-1.5 rounded-lg hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="px-6 py-5 flex flex-col gap-4 max-h-[75vh] overflow-y-auto">
+                <input type="hidden" id="cp-id">
+                
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Program Name <span class="text-red-400">*</span></label>
+                    <input
+                        type="text"
+                        id="cp-name"
+                        placeholder="e.g. Grade 3 - Joy"
+                        autocomplete="off"
+                        class="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none transition-all text-sm font-semibold"
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Program Type <span class="text-red-400">*</span></label>
+                    <select
+                        id="cp-type"
+                        onchange="window.handleProgramTypeChange(this.value)"
+                        class="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none transition-all text-sm font-semibold"
+                    >
+                        <option value="individual">Individual Section Program</option>
+                        <option value="multigrade">Multi-Grade Combined Program</option>
+                        <option value="master">Master Combined Program View</option>
+                    </select>
+                </div>
+
+                <!-- Individual Configuration -->
+                <div id="cp-ind-config" class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Grade Level</label>
+                        <select
+                            id="cp-grade"
+                            onchange="window.populateSectionsDropdownForProgramCreate(this.value)"
+                            class="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none transition-all text-sm font-semibold"
+                        ></select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Section</label>
+                        <select
+                            id="cp-section"
+                            class="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-slate-800 focus:outline-none transition-all text-sm font-semibold"
+                        ></select>
+                    </div>
+                </div>
+
+                <!-- Multi-Grade Configuration -->
+                <div id="cp-multi-config" style="display:none;">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Combine Sections <span class="text-red-400">*</span></label>
+                    <p class="text-[10px] text-slate-400 mb-2">Select sections that share the same classroom/schedule.</p>
+                    <div id="cp-multi-sections-container" class="border border-slate-200 rounded-xl p-3 bg-slate-50 max-h-[150px] overflow-y-auto space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Master Configuration -->
+                <div id="cp-master-config" style="display:none;">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Combine Programs <span class="text-red-400">*</span></label>
+                    <p class="text-[10px] text-slate-400 mb-2">Select Individual or Multi-Grade programs to view side-by-side.</p>
+                    <div id="cp-master-programs-container" class="border border-slate-200 rounded-xl p-3 bg-slate-50 max-h-[150px] overflow-y-auto space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="window.closeCreateProgramModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="window.handleSaveProgram()" class="flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-emerald-700/20 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+                        <i id="cp-save-btn-icon" data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span id="cp-save-btn-text">Save Program</span>
                     </button>
                 </div>
             </div>
