@@ -481,6 +481,14 @@
                 saveState();
             }
             
+            // Expand the target school year if it was collapsed
+            if (window.collapsedYears) {
+                const idx = window.collapsedYears.indexOf(newYear);
+                if (idx !== -1) {
+                    window.collapsedYears.splice(idx, 1);
+                }
+            }
+
             // Update the tracker and fetch the incoming school year state
             localStorage.setItem('last_active_school_year', newYear);
             loadState();

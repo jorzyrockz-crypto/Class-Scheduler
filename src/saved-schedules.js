@@ -1,3 +1,15 @@
+        window.collapsedYears = window.collapsedYears || [];
+
+        window.toggleYearExpansion = function(year) {
+            const idx = window.collapsedYears.indexOf(year);
+            if (idx !== -1) {
+                window.collapsedYears.splice(idx, 1);
+            } else {
+                window.collapsedYears.push(year);
+            }
+            window.renderSavedSchedules();
+        };
+
         window.renderSavedSchedules = function() {
             const treeContainer = document.getElementById('saved-schedules-tree');
             if (!treeContainer) return;
@@ -19,19 +31,20 @@
             let html = '';
             years.forEach(year => {
                 const isActive = year === activeYear;
+                const isCollapsed = window.collapsedYears.includes(year);
                 html += `
                     <div class="mb-1">
                         <button
-                            onclick="window.switchSchoolYear('${year}')"
+                            onclick="${isActive ? `window.toggleYearExpansion('${year}')` : `window.switchSchoolYear('${year}')`}"
                             class="flex items-center gap-2 w-full py-2 px-3 text-[13px] rounded-lg transition-colors text-left group ${isActive ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium'}"
                         >
-                            <i data-lucide="${isActive ? 'folder-open' : 'folder'}" class="w-4 h-4 shrink-0 ${isActive ? 'text-emerald-500' : 'text-slate-400 group-hover:text-emerald-500'} transition-colors"></i>
+                            <i data-lucide="${isActive && !isCollapsed ? 'folder-open' : 'folder'}" class="w-4 h-4 shrink-0 ${isActive ? 'text-emerald-500' : 'text-slate-400 group-hover:text-emerald-500'} transition-colors"></i>
                             <span class="truncate flex-1">${year}</span>
                             ${isActive ? '<span class="text-[9px] font-bold bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded-full shrink-0">Active</span>' : ''}
                         </button>
                 `;
 
-                if (isActive) {
+                if (isActive && !isCollapsed) {
                     html += `<div class="pl-4 mt-1 mb-2 space-y-[2px] border-l border-slate-200 ml-5">`;
                     const programs = window.workspaceState?.programs || [];
                     const activeProgId = window.workspaceState?.activeProgramId || '';
