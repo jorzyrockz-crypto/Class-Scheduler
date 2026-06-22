@@ -7,11 +7,11 @@
     
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="./manifest.json">
-    <meta name="theme-color" content="#10b981">
+    <meta name="theme-color" content="#24292f">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="./icon.svg">
+    <link rel="apple-touch-icon" href="./icon.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -343,6 +343,11 @@
         <!-- LEFT SIDEBAR: Global Navigation -->
         <aside id="global-left-sidebar" class="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col transition-all duration-300 relative z-10 print:hidden hidden md:flex overflow-visible sidebar-expanded">
             <div class="p-4 flex flex-col gap-2 flex-1 overflow-visible">
+                <!-- Sidebar Image -->
+                <div class="nav-image-container flex justify-center mb-4 mt-2 px-2 transition-all duration-300">
+                    <img src="./logo.png" alt="App Logo" class="w-full max-w-[180px] h-auto object-contain drop-shadow-sm transition-all duration-300 hover:scale-105">
+                </div>
+                
                 <div class="nav-label text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 transition-opacity duration-300 whitespace-nowrap overflow-hidden">Navigation</div>
                 <button onclick="setMainView('dashboard')" id="nav-btn-dashboard" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-50 w-full text-left transition-all overflow-visible">
                     <i data-lucide="home" class="w-5 h-5 shrink-0 nav-icon transition-all"></i> 
@@ -1079,8 +1084,9 @@
         window.onAuthStateChanged = onAuthStateChanged;
 
         // --- UPDATE ANNOUNCEMENT SYSTEM ---
-        window.APP_VERSION = "v1.1.3";
+        window.APP_VERSION = "v1.1.4";
         window.APP_CHANGELOG = [
+            "🎨 **UI Update:** Added a new 3D calendar application icon and integrated a horizontal logo into the sidebar navigation.",
             "⚡ **PWA Update Fix:** Resolved an issue where Progressive Web App updates were not properly installing and reloading.",
             "🛠️ **Performance Refactor:** The app's engine has been completely modularized into smaller, highly-efficient files for lightning-fast loading.",
             "🐛 **Authentication Fix:** Resolved a critical bug that caused the login portal overlay to get stuck after signing in.",
