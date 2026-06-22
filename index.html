@@ -366,6 +366,11 @@
                     <span class="nav-text whitespace-nowrap transition-opacity duration-300">Load Summary</span>
                     <div class="nav-tooltip hidden absolute left-[calc(100%+8px)] px-2 py-1 bg-slate-800 text-white text-xs font-bold rounded opacity-0 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 group-hover:opacity-100 shadow-lg border border-slate-700">Load Summary</div>
                 </button>
+                <button onclick="setMainView('teachers')" id="nav-btn-teachers" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-50 w-full text-left transition-all overflow-visible">
+                    <i data-lucide="users" class="w-5 h-5 shrink-0 nav-icon transition-all"></i> 
+                    <span class="nav-text whitespace-nowrap transition-opacity duration-300">Teachers</span>
+                    <div class="nav-tooltip hidden absolute left-[calc(100%+8px)] px-2 py-1 bg-slate-800 text-white text-xs font-bold rounded opacity-0 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 group-hover:opacity-100 shadow-lg border border-slate-700">Teachers</div>
+                </button>
 
                 <!-- SAVED SCHEDULES SECTION -->
                 <div id="saved-schedules-section" class="mt-6 flex-1 flex flex-col min-h-0 overflow-hidden transition-opacity duration-300">
@@ -476,7 +481,7 @@
                     </div>
 
                     <!-- Card 2 -->
-                    <div class="bg-white rounded-[1.25rem] p-5 border border-slate-200 shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow">
+                    <div onclick="setMainView('teachers')" class="cursor-pointer bg-white rounded-[1.25rem] p-5 border border-slate-200 shadow-sm flex items-start gap-4 hover:shadow-md transition-shadow">
                         <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
                             <i data-lucide="user" class="w-5 h-5 text-emerald-600"></i>
                         </div>
@@ -511,6 +516,22 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+
+            <!-- Teachers View -->
+            <div id="center-teachers" class="hidden flex-col gap-6 h-full pb-10">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-slate-800 leading-tight">Faculty Workload Dashboard</h2>
+                        <p class="text-slate-500 text-sm font-medium mt-1">Review detailed workloads, class assignments, and teaching hours for all faculty members.</p>
+                    </div>
+                    <button onclick="window.promptCreateTeacher()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 text-xs">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Add New Teacher
+                    </button>
+                </div>
+                <div id="teachers-dashboard-grid" class="flex flex-col gap-4">
+                    <!-- Populated dynamically by window.renderTeacherDashboard() -->
                 </div>
             </div>
 
@@ -1064,6 +1085,23 @@
                     </div>
                 </div>
 
+                <div id="right-tools-teachers" class="hidden flex flex-col gap-4">
+                    <div class="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex flex-col space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100"><i data-lucide="info" class="w-4 h-4"></i></span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-600 leading-tight">Teacher Guidelines</h3>
+                        </div>
+                        <p class="text-[11px] text-slate-500 leading-relaxed font-medium">
+                            Workloads are automatically calculated based on position and assignments:
+                        </p>
+                        <ul class="text-[10px] text-slate-500 space-y-1.5 list-disc list-inside font-semibold">
+                            <li><strong class="text-slate-700 font-bold">Master Teachers:</strong> Max 25 hours / week (1,500 mins)</li>
+                            <li><strong class="text-slate-700 font-bold">Regular Teachers:</strong> Max 30 hours / week (1,800 mins)</li>
+                            <li>Includes teaching periods and advisory loads</li>
+                        </ul>
+                    </div>
+                </div>
+
             </div>
         </aside>
 
@@ -1085,8 +1123,9 @@
         window.onAuthStateChanged = onAuthStateChanged;
 
         // --- UPDATE ANNOUNCEMENT SYSTEM ---
-        window.APP_VERSION = "v1.1.5";
+        window.APP_VERSION = "v1.1.6";
         window.APP_CHANGELOG = [
+            "🧑‍🏫 **Faculty Page Restored:** Fixed an issue where the Teacher Faculty Workload page was not rendering correctly.",
             "🎨 **Load Summary UI:** Completely redesigned the Load Summary view to feature a cleaner GitHub-style aesthetic.",
             "🎨 **UI Update:** Added a new 3D calendar application icon and integrated a horizontal logo into the sidebar navigation.",
             "⚡ **PWA Update Fix:** Resolved an issue where Progressive Web App updates were not properly installing and reloading.",

@@ -13,12 +13,15 @@
         window.onAuthStateChanged = onAuthStateChanged;
 
         // --- UPDATE ANNOUNCEMENT SYSTEM ---
-        const APP_VERSION = "v1.1.1";
+        const APP_VERSION = "v1.1.6";
         const APP_CHANGELOG = [
-            "🎉 **Theatrical Updater:** Added a gorgeous interactive installation wizard!",
-            "🔐 **SaaS Authentication:** The app is now protected by a secure login portal using real Email and Password authentication.",
-            "🏢 **School Workspaces:** Teachers can now collaborate seamlessly by joining the same 'School ID' workspace during account creation.",
-            "✨ **Clean Profile Menu:** The top navigation bar has been beautifully streamlined with a dedicated Profile Dropdown menu."
+            "🧑‍🏫 **Faculty Page Restored:** Fixed an issue where the Teacher Faculty Workload page was not rendering correctly.",
+            "🎨 **Load Summary UI:** Completely redesigned the Load Summary view to feature a cleaner GitHub-style aesthetic.",
+            "🎨 **UI Update:** Added a new 3D calendar application icon and integrated a horizontal logo into the sidebar navigation.",
+            "⚡ **PWA Update Fix:** Resolved an issue where Progressive Web App updates were not properly installing and reloading.",
+            "🛠️ **Performance Refactor:** The app's engine has been completely modularized into smaller, highly-efficient files for lightning-fast loading.",
+            "🐛 **Authentication Fix:** Resolved a critical bug that caused the login portal overlay to get stuck after signing in.",
+            "☁️ **Cloud Sync Fix:** Addressed a scoping issue that caused the cloud sync status to remain stuck on 'CONNECTING...'"
         ];
 
         // Global variables

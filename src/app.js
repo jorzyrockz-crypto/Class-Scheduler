@@ -1116,6 +1116,323 @@
             // Status remains static 100% per user request
         };
 
+        window.renderTeacherDashboard = () => {
+            const grid = document.getElementById('teachers-dashboard-grid');
+            if (!grid) return;
+            
+            // Reconfigure grid layout to vertical list
+            grid.className = 'flex flex-col gap-4';
+            
+            const teacherLoads = {};
+            if(workspaceState.teachers) {
+                workspaceState.teachers.forEach(t => teacherLoads[t.id] = { mins: 0, subjects: new Set(), classes: {}, advisory: null });
+            }
+            
+            if(workspaceState.classes) {
+                workspaceState.classes.forEach(c => {
+                    if (c.teacherId && teacherLoads[c.teacherId]) {
+                        const slot = workspaceState.timeSlots.find(ts => ts.id === c.timeSlotId);
+                        let m = 0;
+                        if (slot) {
+                            const timeToMinsLocal = (timeStr) => {
+                                if(!timeStr) return 0;
+                                const [h, m] = timeStr.split(':').map(Number);
+                                return h * 60 + m;
+                            };
+                            m = timeToMinsLocal(slot.end) - timeToMinsLocal(slot.start);
+                            teacherLoads[c.teacherId].mins += m;
+                        }
+                        
+                        let subjectName = "Unknown";
+                        if (c.subjectId) {
+                            const sub = workspaceState.subjects.find(s => s.id === c.subjectId);
+                            if (sub) {
+                                subjectName = sub.name;
+                                teacherLoads[c.teacherId].subjects.add(sub.name);
+                            }
+                        }
+                        
+                        let className = "Unknown Class";
+                        if (c.sectionId) {
+                            const sec = workspaceState.sections.find(s => s.id === c.sectionId);
+                            if (sec) {
+                                const grade = workspaceState.grades.find(g => g.id === sec.gradeId);
+                                className = (grade ? grade.name : '') + ' - ' + sec.name;
+                            }
+                        } else if (c.gradeId) {
+                            const grade = workspaceState.grades.find(g => g.id === c.gradeId);
+                            if (grade) className = grade.name + ' - All Sections';
+                        }
+                        
+                        const assignmentKey = className + ' | ' + subjectName;
+                        if (!teacherLoads[c.teacherId].classes[assignmentKey]) {
+                            teacherLoads[c.teacherId].classes[assignmentKey] = 0;
+                        }
+                        teacherLoads[c.teacherId].classes[assignmentKey] += m;
+                    }
+                });
+            }
+
+            if(workspaceState.advisers) {
+                Object.keys(workspaceState.advisers).forEach(grade => {
+                    const advId = workspaceState.advisers[grade];
+                    if (advId && teacherLoads[advId]) {
+                        teacherLoads[advId].mins += 60;
+                        teacherLoads[advId].advisory = grade;
+                    }
+                });
+            }
+
+            const getColorHex = (colorName) => {
+                const colors = {
+                    yellow: '#facc15', orange: '#fb923c', blue: '#60a5fa', teal: '#2dd4bf',
+                    lime: '#a3e635', purple: '#c084fc', rose: '#fb7185', indigo: '#818cf8',
+                    amber: '#fbbf24', emerald: '#34d399', pink: '#f472b6', cyan: '#22d3ee',
+                    violet: '#a78bfa', fuchsia: '#e879f9', sky: '#38bdf8'
+                };
+                return colors[colorName] || '#94a3b8';
+            };
+
+            grid.innerHTML = workspaceState.teachers.map(t => {
+                const data = teacherLoads[t.id];
+                const totalHours = Math.floor(data.mins / 60);
+                const totalMins = data.mins % 60;
+                const loadText = `${totalHours}h ${totalMins > 0 ? totalMins + 'm' : ''}`.trim();
+                
+                const expectedMins = t.position && t.position.toLowerCase().includes("master") ? 1500 : 1800; // 25 hours or 30 hours
+                const expectedHours = expectedMins / 60;
+                const progressPct = Math.min(100, Math.round((data.mins / expectedMins) * 100));
+                
+                const isUnderLoad = data.mins < expectedMins;
+                const statusBadge = isUnderLoad 
+                    ? `<span class="px-2.5 py-1 bg-amber-50 text-amber-600 font-bold text-[10px] uppercase tracking-wider rounded-full flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Under Load</span>`
+                    : `<span class="px-2.5 py-1 bg-emerald-50 text-emerald-600 font-bold text-[10px] uppercase tracking-wider rounded-full flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Balanced</span>`;
+
+                const subjectCount = data.subjects.size;
+                const classCount = Object.keys(data.classes).length;
+                
+                const subtitleParts = [];
+                if(t.position) subtitleParts.push(t.position);
+                if(data.advisory) subtitleParts.push(`${data.advisory} Adviser`);
+                const subtitle = subtitleParts.join(' • ') || 'No Position Set';
+                
+                const colorHex = getColorHex(t.color);
+
+                // Build Subjects Tag Cloud
+                const tagsHTML = Array.from(data.subjects).map(sub => 
+                    `<span class="px-2.5 py-1 bg-amber-50 text-amber-800 text-xs font-semibold rounded-lg">${sub}</span>`
+                ).join('');
+                const tagsDisplay = tagsHTML || `<span class="text-xs text-slate-400">None</span>`;
+
+                // Build Class Assignments List
+                const assignmentsHTML = Object.entries(data.classes).map(([key, mins]) => {
+                    const parts = key.split(' | ');
+                    const cls = parts[0];
+                    const sub = parts[1];
+                    const h = Math.floor(mins / 60);
+                    const m = mins % 60;
+                    const timeStr = h > 0 ? `${h} ${h===1?'hr':'hrs'}` : `${m} m`;
+                    return `
+                        <div class="flex justify-between items-center text-xs py-1">
+                            <div class="flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${colorHex}"></span>
+                                <span class="font-bold text-slate-700">${cls} &ndash; ${sub}</span>
+                            </div>
+                            <span class="text-slate-500 font-bold">${timeStr}</span>
+                        </div>
+                    `;
+                }).join('');
+                const assignmentsDisplay = assignmentsHTML || `<div class="text-xs text-slate-400 py-1">No classes assigned</div>`;
+
+                return `
+                    <details class="group bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden open:shadow-md transition-all duration-300">
+                        <summary class="flex flex-col md:flex-row items-start md:items-center p-4 cursor-pointer list-none gap-4 md:gap-0 relative outline-none select-none">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5" style="background-color: ${colorHex}"></div>
+                            
+                            <!-- Left: Profile -->
+                            <div class="flex items-center gap-4 pl-2 flex-1">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+                                    <i data-lucide="user" class="w-6 h-6 text-slate-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-extrabold text-slate-800 text-base leading-tight uppercase">${t.name}</h3>
+                                    <p class="text-xs font-bold text-slate-500 mt-0.5">${subtitle}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Right: Stats -->
+                            <div class="flex flex-wrap md:flex-nowrap items-center gap-4 md:gap-8 w-full md:w-auto">
+                                ${statusBadge}
+                                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                                    <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i> ${totalHours}/${expectedHours} hrs
+                                </div>
+                                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                                    <i data-lucide="book-open" class="w-4 h-4 text-slate-400"></i> ${subjectCount} Subjects
+                                </div>
+                                <div class="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                                    <i data-lucide="users" class="w-4 h-4 text-slate-400"></i> ${classCount} Classes
+                                </div>
+                                <div class="ml-auto md:ml-0 p-1 rounded-full group-hover:bg-slate-50 transition group-open:bg-emerald-50 border border-transparent group-open:border-emerald-200 text-slate-400 group-open:text-emerald-600">
+                                    <i data-lucide="chevron-down" class="w-5 h-5 transition-transform duration-300 group-open:-rotate-180"></i>
+                                </div>
+                            </div>
+                        </summary>
+                        
+                        <!-- Expanded Details -->
+                        <div class="border-t border-slate-100 p-6 bg-white animate-in slide-in-from-top-2 fade-in duration-200">
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                                
+                                <!-- Col 1: Progress & Summary -->
+                                <div class="lg:col-span-5 flex flex-col">
+                                    <div class="flex justify-between items-end mb-2">
+                                        <h4 class="text-xs font-bold text-slate-800">Workload Progress</h4>
+                                        <span class="text-xs font-bold text-slate-600">${progressPct}% (${totalHours}/${expectedHours} hrs)</span>
+                                    </div>
+                                    <div class="w-full bg-slate-100 rounded-full h-2.5 mb-6 overflow-hidden">
+                                        <div class="h-2.5 rounded-full transition-all duration-1000" style="width: ${progressPct}%; background-color: ${colorHex}"></div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                            <div class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase mb-1"><i data-lucide="clock" class="w-3 h-3 text-purple-500"></i> Teaching Load</div>
+                                            <span class="font-extrabold text-slate-800">${loadText}</span>
+                                        </div>
+                                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                            <div class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase mb-1"><i data-lucide="book-open" class="w-3 h-3 text-emerald-500"></i> Subjects</div>
+                                            <span class="font-extrabold text-slate-800">${subjectCount}</span>
+                                        </div>
+                                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                            <div class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase mb-1"><i data-lucide="users" class="w-3 h-3 text-blue-500"></i> Classes</div>
+                                            <span class="font-extrabold text-slate-800">${classCount}</span>
+                                        </div>
+                                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col items-center justify-center text-center">
+                                            <div class="flex items-center gap-1 text-[10px] font-bold text-slate-500 uppercase mb-1"><i data-lucide="award" class="w-3 h-3 text-red-500"></i> Advisory</div>
+                                            <span class="font-extrabold text-slate-800">${data.advisory || 'None'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Col 2: Subjects -->
+                                <div class="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-8">
+                                    <h4 class="text-xs font-bold text-slate-800 mb-3">Subjects Taught</h4>
+                                    <div class="flex flex-wrap gap-2">
+                                        ${tagsDisplay}
+                                    </div>
+                                </div>
+
+                                <!-- Col 3: Classes -->
+                                <div class="lg:col-span-4 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-8">
+                                    <h4 class="text-xs font-bold text-slate-800 mb-3">Class Assignments</h4>
+                                    <div class="flex flex-col gap-1 max-h-[120px] overflow-y-auto pr-2">
+                                        ${assignmentsDisplay}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Footer Actions -->
+                            <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap gap-3">
+                                <button onclick="window.viewTeacherSchedule('${t.id}')" class="px-4 py-2 border border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                    <i data-lucide="calendar" class="w-3.5 h-3.5"></i> View Schedule
+                                </button>
+                                <button onclick="window.openTeacherModal('${t.id}')" class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                    <i data-lucide="edit-2" class="w-3.5 h-3.5"></i> Edit Teacher
+                                </button>
+                                <button onclick="window.deleteTeacher('${t.id}')" class="px-4 py-2 border border-slate-200 text-red-600 hover:bg-red-50 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm ml-auto">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </details>
+                `;
+            }).join('');
+            
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.promptCreateTeacher = () => { window.openTeacherModal(); };
+        window.promptEditTeacherName = (id) => { window.openTeacherModal(id); };
+        window.promptEditTeacherColor = (id) => { window.openTeacherModal(id); };
+
+        window.openTeacherModal = (id = null) => {
+            const modal = document.getElementById('teacher-modal');
+            const form = document.getElementById('teacher-form');
+            const title = document.getElementById('teacher-modal-title');
+            
+            form.reset();
+            document.getElementById('teacher-modal-id').value = id || '';
+            
+            if (id) {
+                const teacher = workspaceState.teachers.find(t => t.id === id);
+                if (teacher) {
+                    title.innerHTML = '<i data-lucide="edit" class="w-5 h-5 text-emerald-500"></i> Edit Teacher';
+                    document.getElementById('teacher-modal-name').value = teacher.name || '';
+                    document.getElementById('teacher-modal-position').value = teacher.position || '';
+                    const colorInput = document.querySelector(`input[name="teacher-modal-color"][value="${teacher.color}"]`);
+                    if (colorInput) colorInput.checked = true;
+                }
+            } else {
+                title.innerHTML = '<i data-lucide="user-plus" class="w-5 h-5 text-emerald-500"></i> Add New Teacher';
+                const colors = ['yellow', 'orange', 'blue', 'teal', 'lime', 'purple', 'rose', 'indigo', 'amber', 'emerald', 'pink', 'cyan', 'violet', 'fuchsia', 'sky'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                const randomColorInput = document.querySelector(`input[name="teacher-modal-color"][value="${randomColor}"]`);
+                if (randomColorInput) randomColorInput.checked = true;
+            }
+            
+            modal.style.display = 'flex';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        };
+
+        window.closeTeacherModal = () => {
+            document.getElementById('teacher-modal').style.display = 'none';
+        };
+
+        window.handleSaveTeacher = (e) => {
+            e.preventDefault();
+            const id = document.getElementById('teacher-modal-id').value;
+            const name = document.getElementById('teacher-modal-name').value.trim().toUpperCase();
+            const position = document.getElementById('teacher-modal-position').value.trim();
+            const colorEl = document.querySelector('input[name="teacher-modal-color"]:checked');
+            const color = colorEl ? colorEl.value : 'emerald';
+
+            if (!name) return;
+
+            if (id) {
+                const teacher = workspaceState.teachers.find(t => t.id === id);
+                if (teacher) {
+                    teacher.name = name;
+                    teacher.position = position;
+                    teacher.color = color;
+                    if(typeof showToast === 'function') showToast("Teacher updated!");
+                }
+            } else {
+                if (workspaceState.teachers.some(t => t.name === name)) {
+                    if(typeof showToast === 'function') showToast("A teacher with that name already exists.", "error");
+                    return;
+                }
+                const newT = { id: 't-' + Date.now() + Math.random().toString(36).substr(2, 5), name, position, color };
+                workspaceState.teachers.push(newT);
+                if(typeof showToast === 'function') showToast(`Teacher "${name}" created!`);
+            }
+            
+            saveState();
+            renderAll();
+            window.closeTeacherModal();
+        };
+
+        window.viewTeacherSchedule = (id) => {
+            if(typeof window.setActiveCardFilter === 'function') {
+                window.setActiveCardFilter('teacher', id);
+            } else {
+                window.activeCardFilter = { type: 'teacher', id: id };
+                const b = document.getElementById('clear-filter-btn');
+                if(b) b.classList.remove('hidden');
+                renderAll();
+            }
+            if(typeof window.setMainView === 'function') {
+                window.setMainView('schedule');
+            }
+        };
+
         const renderAll = () => {
             const suspendedAvatars = document.querySelectorAll('#touch-drag-avatar');
             suspendedAvatars.forEach(av => av.remove());
@@ -1125,6 +1442,7 @@
             renderDynamicHeaders();
             renderAutopopulatePanel(); 
             renderDiagnostics(); 
+            if(typeof window.renderTeacherDashboard === 'function') window.renderTeacherDashboard();
 
             const tbody = document.getElementById('matrix-tbody');
             tbody.innerHTML = '';
@@ -3235,3 +3553,6 @@
             });
 
 });
+
+
+

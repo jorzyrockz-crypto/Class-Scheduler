@@ -98,7 +98,9 @@
             division: "Division of Aklan",
             district: "District of Balete",
             schoolName: "OQUENDO ELEMENTARY SCHOOL",
+            schoolId: "",
             schoolAddress: "Oquendo, Balete, Aklan",
+            schoolType: "",
             schoolYear: "S.Y. 2025-2026",
             logoLeft: "", 
             logoRight: "",
@@ -312,18 +314,56 @@
 
         const generateId = (prefix) => `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
         
+        const getStorageKey = (year) => {
+            if (!year) return 'elem_program_matrix_v6';
+            return `elem_program_matrix_v6_${year.replace(/[^a-zA-Z0-9-]/g, '_')}`;
+        };
+
         const saveState = () => {
-            localStorage.setItem('elem_program_matrix_v6', JSON.stringify(workspaceState));
-            if (isCloudConnected && currentRoomCode) {
-                saveToCloud(currentRoomCode, workspaceState);
+            const currentYear = workspaceState?.schoolConfig?.schoolYear || defaultSchoolConfig.schoolYear;
+            localStorage.setItem(getStorageKey(currentYear), JSON.stringify(workspaceState));
+            localStorage.setItem('last_active_school_year', currentYear);
+
+            if (window.isCloudConnected && window.currentRoomCode) {
+                window.saveToCloud(window.currentRoomCode, workspaceState);
             }
         };
         
         const loadState = () => {
-            const saved = localStorage.getItem('elem_program_matrix_v6');
+            const lastActiveYear = localStorage.getItem('last_active_school_year') || defaultSchoolConfig.schoolYear;
+            const currentKey = getStorageKey(lastActiveYear);
+            
+            let saved = localStorage.getItem(currentKey);
+            
+            // Legacy Migration logic: fall back to the old storage key if it's the first time
+            if (!saved && localStorage.getItem('elem_program_matrix_v6')) {
+                saved = localStorage.getItem('elem_program_matrix_v6');
+            }
+
             if (saved) {
                 workspaceState = migrateLegacyData(JSON.parse(saved));
             } else {
                 workspaceState = migrateLegacyData(JSON.parse(JSON.stringify(defaultState)));
+                
+                // If it's a completely new blank slate (not the 2025-2026 default), clear specific data
+                if (lastActiveYear !== defaultSchoolConfig.schoolYear) {
+                    workspaceState.teachers = [];
+                    workspaceState.classes = [];
+                    workspaceState.advisers = {};
+                }
             }
+            
+            // Ensure the active school year is set in the config
+            workspaceState.schoolConfig.schoolYear = lastActiveYear;
+        };
+
+        const switchSchoolYear = (newYear) => {
+            // Save current progress to the outgoing school year
+            if (workspaceState) {
+                saveState();
+            }
+            
+            // Update the tracker and fetch the incoming school year state
+            localStorage.setItem('last_active_school_year', newYear);
+            loadState();
         };
