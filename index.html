@@ -343,45 +343,45 @@
         
         <!-- LEFT SIDEBAR: Global Navigation -->
         <aside id="global-left-sidebar" class="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col transition-all duration-300 relative z-10 print:hidden hidden md:flex overflow-visible sidebar-expanded">
-            <div class="p-4 flex flex-col gap-2 flex-1 overflow-visible">
+            <div class="p-3 flex flex-col gap-1 flex-1 min-h-0 overflow-visible">
                 <!-- Sidebar Image -->
-                <div class="nav-image-container flex justify-center mb-4 mt-2 px-2 transition-all duration-300">
+                <div class="nav-image-container flex justify-center mb-2 mt-1 px-2 transition-all duration-300">
                     <img id="sidebar-logo-expanded" src="./logo.png" alt="App Logo" class="w-full max-w-[180px] h-auto object-contain drop-shadow-sm transition-all duration-300 hover:scale-105">
                     <img id="sidebar-logo-collapsed" src="./icon.png" alt="App Icon" class="w-10 h-10 object-contain drop-shadow-sm transition-all duration-300 hover:scale-105 hidden">
                 </div>
                 
-                <div class="nav-label text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-2 transition-opacity duration-300 whitespace-nowrap overflow-hidden">Navigation</div>
-                <button onclick="setMainView('dashboard')" id="nav-btn-dashboard" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-50 w-full text-left transition-all overflow-visible">
+                <div class="nav-label text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 px-2 transition-opacity duration-300 whitespace-nowrap overflow-hidden">Navigation</div>
+                <button onclick="setMainView('dashboard')" id="nav-btn-dashboard" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-1.5 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-50 w-full text-left transition-all overflow-visible">
                     <i data-lucide="home" class="w-5 h-5 shrink-0 nav-icon transition-all"></i> 
                     <span class="nav-text whitespace-nowrap transition-opacity duration-300">Dashboard</span>
                     <div class="nav-tooltip hidden absolute left-[calc(100%+8px)] px-2 py-1 bg-slate-800 text-white text-xs font-bold rounded opacity-0 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 group-hover:opacity-100 shadow-lg border border-slate-700">Dashboard</div>
                 </button>
-                <button onclick="setMainView('schedule')" id="nav-btn-schedule" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-2 text-sm font-semibold rounded-lg bg-emerald-50 text-emerald-700 w-full text-left transition-all overflow-visible">
+                <button onclick="setMainView('schedule')" id="nav-btn-schedule" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-1.5 text-sm font-semibold rounded-lg bg-emerald-50 text-emerald-700 w-full text-left transition-all overflow-visible">
                     <i data-lucide="calendar" class="w-5 h-5 shrink-0 nav-icon transition-all"></i> 
                     <span class="nav-text whitespace-nowrap transition-opacity duration-300">Schedule Matrix</span>
                     <div class="nav-tooltip hidden absolute left-[calc(100%+8px)] px-2 py-1 bg-slate-800 text-white text-xs font-bold rounded opacity-0 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 group-hover:opacity-100 shadow-lg border border-slate-700">Schedule Matrix</div>
                 </button>
-                <button onclick="setMainView('summary')" id="nav-btn-summary" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-50 w-full text-left transition-all overflow-visible">
+                <button onclick="setMainView('summary')" id="nav-btn-summary" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-1.5 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-50 w-full text-left transition-all overflow-visible">
                     <i data-lucide="pie-chart" class="w-5 h-5 shrink-0 nav-icon transition-all"></i> 
                     <span class="nav-text whitespace-nowrap transition-opacity duration-300">Load Summary</span>
                     <div class="nav-tooltip hidden absolute left-[calc(100%+8px)] px-2 py-1 bg-slate-800 text-white text-xs font-bold rounded opacity-0 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 group-hover:opacity-100 shadow-lg border border-slate-700">Load Summary</div>
                 </button>
-                <button onclick="setMainView('teachers')" id="nav-btn-teachers" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-2 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-50 w-full text-left transition-all overflow-visible">
+                <button onclick="setMainView('teachers')" id="nav-btn-teachers" class="nav-btn group relative flex items-center justify-start gap-3 px-3 py-1.5 text-sm font-semibold rounded-lg text-slate-600 hover:bg-slate-50 w-full text-left transition-all overflow-visible">
                     <i data-lucide="users" class="w-5 h-5 shrink-0 nav-icon transition-all"></i> 
                     <span class="nav-text whitespace-nowrap transition-opacity duration-300">Teachers</span>
                     <div class="nav-tooltip hidden absolute left-[calc(100%+8px)] px-2 py-1 bg-slate-800 text-white text-xs font-bold rounded opacity-0 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 group-hover:opacity-100 shadow-lg border border-slate-700">Teachers</div>
                 </button>
 
                 <!-- SAVED SCHEDULES SECTION -->
-                <div id="saved-schedules-section" class="mt-6 flex-1 flex flex-col min-h-0 overflow-hidden transition-opacity duration-300">
-                    <div class="flex items-center justify-between px-2 mb-2">
+                <div id="saved-schedules-section" class="mt-4 flex-1 flex flex-col min-h-0 overflow-hidden transition-opacity duration-300">
+                    <div class="flex items-center justify-between px-2 mb-1">
                         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">School Years</div>
                         <button onclick="window.openNewSYModal()" class="text-slate-400 hover:text-emerald-600 transition-colors" title="New School Year">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
                     
-                    <button onclick="window.openCreateProgramModal()" class="flex items-center justify-center gap-2 w-full py-1.5 px-3 mb-3 text-xs font-semibold rounded border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shrink-0">
+                    <button onclick="window.openCreateProgramModal()" class="flex items-center justify-center gap-2 w-full py-1.5 px-3 mb-2 text-xs font-semibold rounded border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shrink-0">
                         <i data-lucide="plus" class="w-3.5 h-3.5"></i> New Class Program
                     </button>
 
@@ -392,7 +392,7 @@
                 </div>
                 
                 <!-- Collapsed State Icon -->
-                <div id="saved-schedules-collapsed-icon" class="hidden mt-6 w-full flex-col items-center">
+                <div id="saved-schedules-collapsed-icon" class="hidden mt-4 w-full flex-col items-center">
                     <button onclick="window.toggleSidebar('left')" class="group relative flex items-center justify-center w-full py-2 text-slate-400 hover:text-slate-600 transition-colors overflow-visible">
                         <i data-lucide="folder-open" class="w-5 h-5 shrink-0 transition-all"></i>
                         <div class="nav-tooltip hidden absolute left-[calc(100%+8px)] px-2 py-1 bg-slate-800 text-white text-xs font-bold rounded opacity-0 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50 group-hover:opacity-100 shadow-lg border border-slate-700">Saved Schedules</div>
