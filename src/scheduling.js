@@ -1,4 +1,4 @@
-import { State, saveState } from './state.js';
+﻿import { State, saveState } from './state.js';
 import { isCloudConnected, currentRoomCode, saveToCloud } from './cloudSync.js';
 import { timeToMins } from './utils.js';
 
@@ -45,7 +45,7 @@ export const assignTeacherQuick = (teacherId) => {
         if (isCollision) {
             if (_showToast) _showToast("Warning: Teacher is double-booked on this time slot!", "error");
         } else {
-            if (_showToast) _showToast("Faculty assigned successfully!");
+            if (_showToast) _showToast("Teacher assigned successfully!");
         }
         saveState(isCloudConnected, currentRoomCode, saveToCloud);
         State.activeSelectedCardId = null; 

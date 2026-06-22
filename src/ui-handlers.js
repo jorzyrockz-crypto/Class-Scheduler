@@ -17,6 +17,10 @@
                 if (!isExpanded) {
                     // Expand Left Sidebar
                     sidebar.classList.remove('w-[72px]');
+                    const logoExpanded = document.getElementById('sidebar-logo-expanded');
+                    const logoCollapsed = document.getElementById('sidebar-logo-collapsed');
+                    if (logoExpanded) logoExpanded.classList.remove('hidden');
+                    if (logoCollapsed) logoCollapsed.classList.add('hidden');
                     sidebar.classList.add('w-64');
                     if (icon) icon.style.transform = 'rotate(0deg)';
                     if (bottomArea) bottomArea.classList.replace('justify-center', 'justify-end');
@@ -38,6 +42,10 @@
                 } else {
                     // Collapse Left Sidebar
                     sidebar.classList.remove('w-64');
+                    const logoExpanded = document.getElementById('sidebar-logo-expanded');
+                    const logoCollapsed = document.getElementById('sidebar-logo-collapsed');
+                    if (logoExpanded) logoExpanded.classList.add('hidden');
+                    if (logoCollapsed) logoCollapsed.classList.remove('hidden');
                     sidebar.classList.add('w-[72px]');
                     if (icon) icon.style.transform = 'rotate(180deg)';
                     if (bottomArea) bottomArea.classList.replace('justify-end', 'justify-center');
@@ -120,14 +128,13 @@
                 }
             } else if (view === 'summary') {
                 if (workspace) workspace.style.display = 'flex';
-                if (horizontalTabs) horizontalTabs.style.display = 'flex';
+                if (horizontalTabs) horizontalTabs.style.display = 'none';
                 if (dashboard) dashboard.style.display = 'none';
                 if (typeof setActiveTab === 'function') setActiveTab('summary');
             }
         };
 
         setTimeout(() => {
-            if(typeof setMainView === 'function') setMainView('schedule');
             renderSavedSchedules();
         }, 100);
 

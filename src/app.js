@@ -616,7 +616,7 @@
                                 t === 'master-g12' && tab === 'master_g12' || 
                                 t === tab;
                 btn.className = matches 
-                    ? 'px-4 py-2 text-xs font-bold rounded-lg border bg-emerald-600 text-white border-emerald-600 shadow-sm' 
+                    ? 'px-4 py-2 text-xs font-bold rounded-lg border bg-emerald-600 text-white border-emerald-600 shadow-sm tab-active' 
                     : 'px-4 py-2 text-xs font-bold rounded-lg border border-slate-200 hover:bg-slate-100 bg-white text-slate-700';
             });
             
@@ -650,9 +650,9 @@
                         const btn = document.getElementById(`sum-filter-${f}`);
                         if (btn) {
                             if (f === 'all') {
-                                btn.className = "px-3 py-1.5 text-[11px] font-bold rounded-lg border bg-emerald-600 text-white border-emerald-600 shadow-sm transition";
+                                btn.className = "px-3 py-1.5 text-[11px] font-semibold rounded-md border bg-slate-800 text-white border-slate-800 transition";
                             } else {
-                                btn.className = "px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 bg-white transition";
+                                btn.className = "px-3 py-1.5 text-[11px] font-semibold rounded-md border border-slate-300 hover:bg-slate-50 text-slate-700 bg-white transition";
                             }
                         }
                     });
@@ -774,14 +774,14 @@
         };
 
         const renderAutopopulatePanel = () => {
-            const container = document.getElementById('faculty-panel-flex');
-            const titleEl = document.getElementById('faculty-panel-title');
+            const container = document.getElementById('teacher-panel-flex');
+            const titleEl = document.getElementById('teacher-panel-title');
             const clearBtn = document.getElementById('clear-highlight-btn');
 
             if (!container) return;
 
             if (!activeSelectedCardId) {
-                titleEl.innerText = "Faculty Directory";
+                titleEl.innerText = "Teacher Directory";
                 if (activeTeacherFilterId) {
                     clearBtn.classList.remove('hidden');
                 } else {
@@ -896,7 +896,7 @@
             if (!block) return;
 
             const subject = workspaceState.subjects.find(s => s.id === block.subjectId) || { name: 'Unknown' };
-            titleEl.innerText = `Faculty: ${subject.name}`;
+            titleEl.innerText = `Teacher: ${subject.name}`;
             clearBtn.classList.remove('hidden');
 
             const dayCode = block.day;
@@ -979,7 +979,7 @@
                 if (isCollision) {
                     showToast("Warning: Teacher is double-booked on this time slot!", "error");
                 } else {
-                    showToast("Faculty assigned successfully!");
+                    showToast("Teacher assigned successfully!");
                 }
                 saveState();
                 activeSelectedCardId = null; 
@@ -1350,7 +1350,7 @@
             const tbody = document.getElementById('matrix-tbody');
             tbody.innerHTML = '';
 
-            let totalFaculty = workspaceState.teachers.length;
+            let totalTeacher = workspaceState.teachers.length;
             let grandTotalWeeklyTeachingMins = 0;
             let totalOverloadedCount = 0;
             let totalDailyLoadsSum = 0;
@@ -1446,54 +1446,54 @@
             });
 
             const grandTotalWeeklyTeachingHours = grandTotalWeeklyTeachingMins / 60.0;
-            const averageDailyLoad = totalFaculty > 0 ? (totalDailyLoadsSum / totalFaculty) : 0;
-            const complianceRate = totalFaculty > 0 ? (((totalFaculty - totalOverloadedCount) / totalFaculty) * 100) : 100;
+            const averageDailyLoad = totalTeacher > 0 ? (totalDailyLoadsSum / totalTeacher) : 0;
+            const complianceRate = totalTeacher > 0 ? (((totalTeacher - totalOverloadedCount) / totalTeacher) * 100) : 100;
 
             const kpiGrid = document.getElementById('summary-kpi-grid');
             if (kpiGrid) {
                 kpiGrid.innerHTML = `
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs flex items-center gap-3.5 hover:shadow-sm transition-all">
-                        <span class="p-2.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 shadow-2xs">
-                            <i data-lucide="users" class="w-4.5 h-4.5"></i>
-                        </span>
-                        <div>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Instructors</p>
-                            <h4 class="text-lg font-extrabold text-slate-900 mt-0.5">${totalFaculty}</h4>
-                            <span class="text-[9px] font-semibold text-indigo-500">Active roster members</span>
+                    <div class="bg-white border border-slate-300 p-4 rounded-lg flex flex-col gap-1 shadow-sm">
+                        <div class="flex items-center gap-2 text-slate-500 mb-1">
+                            <i data-lucide="users" class="w-4 h-4"></i>
+                            <span class="text-[11px] font-semibold uppercase tracking-wider">Total Teachers</span>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <h4 class="text-2xl font-semibold text-slate-900">${totalTeacher}</h4>
+                            <span class="text-xs text-slate-500">active members</span>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs flex items-center gap-3.5 hover:shadow-sm transition-all">
-                        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-lg border border-blue-100 shadow-2xs">
-                            <i data-lucide="clock" class="w-4.5 h-4.5"></i>
-                        </span>
-                        <div>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Schedule Volume</p>
-                            <h4 class="text-lg font-extrabold text-slate-900 mt-0.5">${grandTotalWeeklyTeachingHours.toFixed(1)} hrs</h4>
-                            <span class="text-[9px] font-semibold text-blue-500">Cumulative weekly contact</span>
+                    <div class="bg-white border border-slate-300 p-4 rounded-lg flex flex-col gap-1 shadow-sm">
+                        <div class="flex items-center gap-2 text-slate-500 mb-1">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                            <span class="text-[11px] font-semibold uppercase tracking-wider">Schedule Volume</span>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <h4 class="text-2xl font-semibold text-slate-900">${grandTotalWeeklyTeachingHours.toFixed(1)}</h4>
+                            <span class="text-xs text-slate-500">hrs weekly contact</span>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs flex items-center gap-3.5 hover:shadow-sm transition-all">
-                        <span class="p-2.5 bg-amber-50 text-amber-600 rounded-lg border border-amber-100 shadow-2xs">
-                            <i data-lucide="trending-up" class="w-4.5 h-4.5"></i>
-                        </span>
-                        <div>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Avg Workload</p>
-                            <h4 class="text-lg font-extrabold text-slate-900 mt-0.5">${averageDailyLoad.toFixed(1)} hrs/day</h4>
-                            <span class="text-[9px] font-semibold text-amber-500">Ideal range: 5.0 - 6.0</span>
+                    <div class="bg-white border border-slate-300 p-4 rounded-lg flex flex-col gap-1 shadow-sm">
+                        <div class="flex items-center gap-2 text-slate-500 mb-1">
+                            <i data-lucide="trending-up" class="w-4 h-4"></i>
+                            <span class="text-[11px] font-semibold uppercase tracking-wider">Avg Workload</span>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <h4 class="text-2xl font-semibold text-slate-900">${averageDailyLoad.toFixed(1)}</h4>
+                            <span class="text-xs text-slate-500">hrs/day (Ideal: 5-6)</span>
                         </div>
                     </div>
 
-                    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-xs flex items-center gap-3.5 hover:shadow-sm transition-all">
-                        <span class="p-2.5 ${complianceRate >= 80 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'} rounded-lg border shadow-2xs">
-                            <i data-lucide="${complianceRate >= 80 ? 'shield-check' : 'shield-alert'}" class="w-4.5 h-4.5"></i>
-                        </span>
-                        <div>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Load Compliance</p>
-                            <h4 class="text-lg font-extrabold text-slate-900 mt-0.5">${complianceRate.toFixed(0)}%</h4>
-                            <span class="text-[9px] font-semibold ${complianceRate >= 80 ? 'text-emerald-600' : 'text-rose-600'}">
-                                ${totalOverloadedCount === 0 ? 'Optimal distributions' : `${totalOverloadedCount} adjust suggested`}
+                    <div class="bg-white border border-slate-300 p-4 rounded-lg flex flex-col gap-1 shadow-sm">
+                        <div class="flex items-center gap-2 text-slate-500 mb-1">
+                            <i data-lucide="${complianceRate >= 80 ? 'shield-check' : 'shield-alert'}" class="w-4 h-4 ${complianceRate >= 80 ? 'text-emerald-500' : 'text-rose-500'}"></i>
+                            <span class="text-[11px] font-semibold uppercase tracking-wider">Load Compliance</span>
+                        </div>
+                        <div class="flex items-baseline gap-2">
+                            <h4 class="text-2xl font-semibold text-slate-900">${complianceRate.toFixed(0)}%</h4>
+                            <span class="text-xs ${complianceRate >= 80 ? 'text-emerald-600' : 'text-rose-600'}">
+                                ${totalOverloadedCount === 0 ? 'Optimal' : `${totalOverloadedCount} adjust suggested`}
                             </span>
                         </div>
                     </div>
@@ -1515,7 +1515,7 @@
             if (filteredTeachers.length === 0) {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td colspan="7" class="p-10 text-center text-slate-400 bg-slate-50/50 italic font-semibold">
+                    <td colspan="5" class="p-10 text-center text-slate-400 bg-slate-50/50 italic font-semibold">
                         <div class="flex flex-col items-center gap-2 justify-center py-4">
                             <i data-lucide="search" class="w-8 h-8 text-slate-300"></i>
                             <span>No instructors match the active filters.</span>
@@ -1529,36 +1529,29 @@
 
             filteredTeachers.forEach(({ teacher, advisoryText, isAdviser, adviserLoadDaily, weeklyTeachingHours, dailyTeachingHours, totalDailyLoad, statusType }) => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50/70 transition-all border-b border-slate-200 duration-150";
+                tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-200";
 
                 const badgeHex = hexBadgeColor[teacher.color || 'blue'];
                 const dailyExcess = totalDailyLoad - 6.00;
                 const excessMins = Math.round(dailyExcess * 60);
-                const gaugePercentage = Math.min(100, (totalDailyLoad / 8.0) * 100);
 
-                let barColor = 'bg-emerald-500';
-                let bgBarColor = 'bg-emerald-100';
                 let badgeText = 'Optimal Load';
-                let badgeClasses = 'bg-emerald-50 border-emerald-200 text-emerald-700';
+                let badgeClasses = 'border-emerald-300 text-emerald-700 bg-emerald-50/50';
 
                 if (statusType === 'overload') {
-                    barColor = 'bg-rose-500';
-                    bgBarColor = 'bg-rose-100';
                     badgeText = `Overload (+${excessMins}m)`;
-                    badgeClasses = 'bg-rose-50 border-rose-200 text-rose-700 font-bold';
+                    badgeClasses = 'border-rose-300 text-rose-700 bg-rose-50/50 font-semibold';
                 } else if (statusType === 'underload') {
-                    barColor = 'bg-sky-500';
-                    bgBarColor = 'bg-sky-100';
                     badgeText = 'Underloaded';
-                    badgeClasses = 'bg-sky-50 border-sky-200 text-sky-700';
+                    badgeClasses = 'border-slate-300 text-slate-600 bg-slate-50';
                 }
 
                 const teacherClasses = workspaceState.classes.filter(c => c.teacherId === teacher.id);
                 let scheduleBlocksHtml = '';
                 if (teacherClasses.length === 0) {
-                    scheduleBlocksHtml = '<span class="text-slate-400 italic text-[10px]">No assigned classes</span>';
+                    scheduleBlocksHtml = '<span class="text-slate-400 italic text-[11px]">No assigned classes</span>';
                 } else {
-                    scheduleBlocksHtml = `<div class="flex flex-wrap gap-1">`;
+                    scheduleBlocksHtml = `<div class="flex flex-wrap gap-1.5">`;
                     teacherClasses.forEach(c => {
                         const sub = workspaceState.subjects.find(s => s.id === c.subjectId);
                         const ts = workspaceState.timeSlots.find(slot => slot.id === c.timeSlotId);
@@ -1567,8 +1560,9 @@
                         const dayLabel = c.day === 'master' ? 'Daily' : c.day.toUpperCase();
                         
                         scheduleBlocksHtml += `
-                            <span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-50 border border-slate-200 text-slate-700 capitalize flex items-center gap-1 hover:bg-slate-100 transition-colors">
-                                <strong>${subLabel}</strong> (${escapeHtml(c.grade)} - ${mins}m, ${dayLabel})
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-white border border-slate-200 text-slate-600 hover:border-slate-300 transition-colors cursor-default">
+                                <span class="font-semibold text-slate-700">${subLabel}</span> 
+                                <span class="text-slate-400">(${escapeHtml(c.grade)} &middot; ${mins}m &middot; ${dayLabel})</span>
                             </span>
                         `;
                     });
@@ -1576,31 +1570,17 @@
                 }
 
                 tr.innerHTML = `
-                    <td class="p-3.5 border-r border-slate-200 font-bold text-slate-900 flex items-center gap-2.5 min-w-[200px] h-full align-middle font-semibold">
-                        <span class="w-3 h-3 rounded-full ${badgeHex} shrink-0 shadow-2xs"></span>
-                        <div class="truncate">
-                            <span class="block uppercase text-xs truncate leading-snug">${escapeHtml(teacher.name)}</span>
-                            ${isAdviser ? `<span class="text-[9.5px] px-1 bg-amber-100 text-amber-800 rounded font-bold uppercase block mt-0.5 tracking-wider w-max">Adviser</span>` : ''}
+                    <td class="p-3 text-slate-900 flex items-center gap-3 min-w-[200px] h-full align-middle">
+                        <span class="w-3 h-3 rounded-full ${badgeHex} shrink-0 ring-1 ring-black/5 mt-1 self-start"></span>
+                        <div class="truncate flex flex-col gap-1 items-start">
+                            <span class="block text-sm font-medium truncate">${escapeHtml(teacher.name)}</span>
+                            ${isAdviser ? `<span class="px-2 py-0.5 border border-amber-200 bg-amber-50 text-amber-700 rounded-full text-[10px] font-medium inline-block truncate max-w-[180px]" title="${escapeHtml(advisoryText)}">Adviser: ${escapeHtml(advisoryText)}</span>` : ''}
                         </div>
                     </td>
-                    <td class="p-3.5 border-r border-slate-200 text-xs font-semibold text-slate-700 text-center align-middle whitespace-nowrap">${escapeHtml(advisoryText)}</td>
-                    <td class="p-3.5 border-r border-slate-200 align-middle max-w-[340px]">${scheduleBlocksHtml}</td>
-                    <td class="p-3.5 border-r border-slate-200 align-middle w-[160px] print:hidden">
-                        <div class="flex flex-col gap-1">
-                            <div class="flex justify-between items-center text-[9px] font-bold text-slate-500">
-                                <span>${totalDailyLoad.toFixed(1)} hrs/day</span>
-                                <span>${gaugePercentage.toFixed(0)}%</span>
-                            </div>
-                            <div class="w-full h-2.5 ${bgBarColor} rounded-full overflow-hidden relative border border-slate-100">
-                                <div class="h-full ${barColor} transition-all duration-300" style="width: ${gaugePercentage}%"></div>
-                                <div class="absolute left-[75%] top-0 bottom-0 w-0.5 bg-black/15" title="Optimal limit line (6 hours)"></div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="p-3.5 border-r border-slate-200 text-xs text-slate-800 font-bold text-center align-middle whitespace-nowrap">${weeklyTeachingHours.toFixed(1)} hrs</td>
-                    <td class="p-3.5 border-r border-slate-200 text-xs text-slate-500 font-semibold text-center align-middle whitespace-nowrap">${adviserLoadDaily.toFixed(1)} hrs</td>
-                    <td class="p-3.5 text-center align-middle">
-                        <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${badgeClasses} uppercase block mx-auto w-max shadow-2xs">
+                    <td class="p-3 align-middle max-w-[340px]">${scheduleBlocksHtml}</td>
+                    <td class="p-3 text-sm text-slate-700 align-middle whitespace-nowrap font-medium">${totalDailyLoad.toFixed(1)} hrs/day</td>
+                    <td class="p-3 align-middle">
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] border ${badgeClasses} w-max block">
                             ${badgeText}
                         </span>
                     </td>
@@ -1617,9 +1597,9 @@
                 const btn = document.getElementById(`sum-filter-${f}`);
                 if (!btn) return;
                 if (f === filter) {
-                    btn.className = "px-3 py-1.5 text-[11px] font-bold rounded-lg border bg-emerald-600 text-white border-emerald-600 shadow-sm transition";
+                    btn.className = "px-3 py-1.5 text-[11px] font-semibold rounded-md border bg-slate-800 text-white border-slate-800 transition";
                 } else {
-                    btn.className = "px-3 py-1.5 text-[11px] font-bold rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 bg-white transition";
+                    btn.className = "px-3 py-1.5 text-[11px] font-semibold rounded-md border border-slate-300 hover:bg-slate-50 text-slate-700 bg-white transition";
                 }
             });
             renderAll();
@@ -1635,17 +1615,14 @@
             thead.innerHTML = '';
             
             const tr = document.createElement('tr');
-            tr.className = "bg-slate-100 text-slate-700 text-xs font-extrabold uppercase tracking-wider border-b border-slate-200";
+            tr.className = "bg-slate-50 text-slate-500 text-xs font-semibold border-b border-slate-300";
             
             if (workspaceState.activeTab === 'summary') {
                 tr.innerHTML = `
-                    <th class="p-3 border-r border-slate-200 text-left font-bold w-1/4">Faculty Member</th>
-                    <th class="p-3 border-r border-slate-200 text-center font-bold w-1/12">Advisory Room</th>
-                    <th class="p-3 border-r border-slate-200 text-left font-bold w-1/3">Scheduled Subject Blocks</th>
-                    <th class="p-3 border-r border-slate-200 text-center font-bold w-1/12 print:hidden">Workload Gauge</th>
-                    <th class="p-3 border-r border-slate-200 text-center font-bold w-1/12">Weekly Teaching</th>
-                    <th class="p-3 border-r border-slate-200 text-center font-bold w-1/12">Advisory Credit</th>
-                    <th class="p-3 text-center font-bold w-1/12">Compliance Status</th>
+                    <th class="p-3 text-left font-semibold w-1/4">Teacher</th>
+                    <th class="p-3 text-left font-semibold w-5/12">Subject Assignment</th>
+                    <th class="p-3 text-left font-semibold w-1/12">Total Teaching Load</th>
+                    <th class="p-3 text-left font-semibold w-1/12">Compliance Status</th>
                 `;
             } else {
                 tr.innerHTML = `
@@ -3109,7 +3086,11 @@
 
         window.onload = function () {
             loadState();
-            setActiveTab(workspaceState.activeTab || 'master');
+            const initialTab = workspaceState.activeTab || 'master';
+            setActiveTab(initialTab);
+            if (typeof setMainView === 'function') {
+                setMainView(initialTab === 'summary' ? 'summary' : 'schedule');
+            }
             initCloudSync();
         };
 
