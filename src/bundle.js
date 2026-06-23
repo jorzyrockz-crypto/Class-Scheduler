@@ -776,58 +776,40 @@ const setupCloudSync = (config, token, id, deps) => {
     appId = id;
     _showToast = deps.showToast;
     _renderAll = deps.renderAll;
-
-    if (config) {
-        try {
-            const app = initializeApp(config);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            isCloudEnabled = true;
-        } catch (err) {
-            console.error("Cloud configuration failed:", err);
-        }
-    }
+    // Firebase is already initialized via the module script in index.html.
+    // window.db and window.auth are set before bundle.js runs.
+    // We do NOT re-initialize here to avoid duplicate Firebase app errors.
+    isCloudEnabled = !!(window.db && window.auth);
 };
 
+// No-op kept for backward compat; actual auth is handled by module script in index.html
 async function initCloudSync(initialAuthToken) {
-    if (!isCloudEnabled) {
+    if (!window.db || !window.auth) {
         updateCloudUI('disabled');
         return;
     }
+    // Auth state is managed by onAuthStateChanged in the module script.
+    // setSyncSchool() will be called from there once the user is confirmed signed in.
     updateCloudUI('connecting');
-    try {
-        let user;
-        if (initialAuthToken) {
-            const cred = await signInWithCustomToken(auth, initialAuthToken);
-            user = cred.user;
-        } else {
-            const cred = await signInAnonymously(auth);
-            user = cred.user;
-        }
-        if (user) {
-            isCloudConnected = true;
-            listenToRoom(currentRoomCode);
-        }
-    } catch (err) {
-        console.error("Cloud connection failed:", err);
-        updateCloudUI('failed');
-    }
 }
 
 function listenToRoom(roomCode) {
     if (unsubscribeRoom) unsubscribeRoom();
     updateCloudUI('connecting');
-    
-    const activeDb = db || window.db;
-    if (!activeDb) {
-        console.error("Firestore database is not initialized.");
+
+    const activeDb = window.db || db;
+    const activeDoc = window.doc;
+    const activeOnSnapshot = window.onSnapshot;
+
+    if (!activeDb || !activeDoc || !activeOnSnapshot) {
+        console.error("Firestore not initialized. Cannot listen to room.");
         updateCloudUI('disabled');
         return;
     }
     const docRef = (currentUser && currentSchoolId)
-        ? doc(activeDb, 'artifacts', appId, 'schools', currentSchoolId, 'schedules', roomCode)
-        : doc(activeDb, 'artifacts', appId, 'public', 'data', 'schedules', roomCode);
-    unsubscribeRoom = onSnapshot(docRef, (docSnap) => {
+        ? activeDoc(activeDb, 'artifacts', appId, 'schools', currentSchoolId, 'schedules', roomCode)
+        : activeDoc(activeDb, 'artifacts', appId, 'public', 'data', 'schedules', roomCode);
+    unsubscribeRoom = activeOnSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
             const incomingData = docSnap.data();
             if (incomingData && incomingData.subjects && incomingData.teachers) {
@@ -847,15 +829,17 @@ function listenToRoom(roomCode) {
 }
 
 async function saveToCloud(roomCode, data) {
-    const activeDb = db || window.db;
-    if (!isCloudConnected || !activeDb) return;
+    const activeDb = window.db || db;
+    const activeDoc = window.doc;
+    const activeSetDoc = window.setDoc;
+    if (!isCloudConnected || !activeDb || !activeDoc || !activeSetDoc) return;
     try {
         updateCloudUI('saving');
         const docRef = (currentUser && currentSchoolId)
-            ? doc(activeDb, 'artifacts', appId, 'schools', currentSchoolId, 'schedules', roomCode)
-            : doc(activeDb, 'artifacts', appId, 'public', 'data', 'schedules', roomCode);
+            ? activeDoc(activeDb, 'artifacts', appId, 'schools', currentSchoolId, 'schedules', roomCode)
+            : activeDoc(activeDb, 'artifacts', appId, 'public', 'data', 'schedules', roomCode);
         const cleanData = JSON.parse(JSON.stringify(data));
-        await setDoc(docRef, cleanData);
+        await activeSetDoc(docRef, cleanData);
         updateCloudUI('connected');
     } catch (err) {
         console.error("Failed to save to cloud:", err);
@@ -4419,13 +4403,16 @@ const renderDiagnostics = (workspaceState, timeToMins, formatTo12Hour, escapeHtm
             loadState();
             const initialTab = State.workspace.activeTab || 'master';
             setActiveTab(initialTab);
-            if (typeof setMainView === 'function') {
-                setMainView(initialTab === 'summary' ? 'summary' : 'schedule');
+            // setMainView is defined on window further below; use window reference
+            if (typeof window.setMainView === 'function') {
+                window.setMainView(initialTab === 'summary' ? 'summary' : 'schedule');
             }
             initCloudSync(initialAuthToken);
         };
 
         // --- EXPOSE MODULE FUNCTIONS TO GLOBAL WINDOW SCOPE FOR HTML HANDLERS ---
+        window.renderAll = renderAll; // needed by cloudSync and cross-module calls
+        window.showToast = showToast;
         window.openResourceModal = openResourceModal;
         window.closeResourceModal = closeResourceModal;
         window.openCreateModal = openCreateModal;
