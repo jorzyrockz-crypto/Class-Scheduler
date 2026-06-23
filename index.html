@@ -1057,9 +1057,6 @@
 
             </div>
         </aside>
-
-    </div>
-
     <!-- Firebase bootstrap: loads & exposes auth, firestore helpers, and app globals -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -1083,12 +1080,6 @@
         window.doc = doc;
         window.getDoc = getDoc;
         window.setDoc = setDoc;
-
-        // --- Expose Auth helpers to window ---
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
-        window.signOut = signOut;
-        window.onAuthStateChanged = onAuthStateChanged;
 
         // --- App Version & Changelog ---
         window.APP_VERSION = "v1.1.7";
@@ -1121,10 +1112,13 @@
         };
 
         // --- Initialize Firebase ---
+        let auth, db;
         try {
             const app = initializeApp(firebaseConfig);
-            window.db = getFirestore(app);
-            window.auth = getAuth(app);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            window.db = db;
+            window.auth = auth;
             window.isCloudEnabled = true;
         } catch (err) {
             console.error("Firebase initialization failed:", err);
@@ -1133,6 +1127,77 @@
             window.isCloudEnabled = false;
         }
 
+        // --- Auth Action Handler (uses local Firebase vars — matches original app.js pattern) ---
+        async function handleAuthAction(action) {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const schoolIdInput = document.getElementById('auth-school');
+            const schoolId = schoolIdInput ? schoolIdInput.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '') : '';
+
+            const errorMsg = document.getElementById('auth-error-msg');
+            const errorText = document.getElementById('auth-error-text');
+
+            if (action !== 'logout' && (!email || !password || !schoolId)) {
+                if (errorMsg && errorText) {
+                    errorMsg.classList.remove('hidden');
+                    errorText.innerText = "Please enter School ID, Email, and Password.";
+                }
+                return;
+            }
+
+            if (errorMsg) errorMsg.classList.add('hidden');
+
+            try {
+                if (action === 'login') {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else if (action === 'signup') {
+                    const cred = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, 'users', cred.user.uid), { schoolId: schoolId });
+                } else if (action === 'logout') {
+                    await signOut(auth);
+                }
+            } catch (error) {
+                if (errorMsg && errorText) {
+                    errorMsg.classList.remove('hidden');
+                    errorText.innerText = error.message;
+                }
+            }
+        }
+        window.handleAuthAction = handleAuthAction;
+
+        // --- Auth State Listener (uses local Firebase vars — matches original app.js pattern) ---
+        if (auth) {
+            onAuthStateChanged(auth, async (user) => {
+                const authPortal = document.getElementById('auth-portal');
+                const userEmailSpan = document.getElementById('nav-user-email');
+                const userSchoolSpan = document.getElementById('nav-user-school');
+                const profileContainer = document.getElementById('nav-profile-container');
+
+                if (user) {
+                    let schoolId = 'default-school';
+                    try {
+                        const userDoc = await getDoc(doc(db, 'users', user.uid));
+                        if (userDoc.exists() && userDoc.data().schoolId) {
+                            schoolId = userDoc.data().schoolId;
+                        }
+                    } catch (e) { /* fallback already set */ }
+
+                    if (authPortal) authPortal.style.display = 'none';
+                    if (profileContainer) profileContainer.classList.remove('hidden');
+                    if (userEmailSpan) userEmailSpan.innerText = user.email;
+                    if (userSchoolSpan) userSchoolSpan.innerText = schoolId;
+
+                    // Hand off to bundle.js cloud sync engine (safe: bundle.js runs before auth state fires)
+                    if (typeof window.setSyncSchool === 'function') window.setSyncSchool(schoolId, user);
+                    if (typeof window.checkVersion === 'function') window.checkVersion();
+                } else {
+                    if (authPortal) authPortal.style.display = 'flex';
+                    if (profileContainer) profileContainer.classList.add('hidden');
+                    if (typeof window.setSyncSchool === 'function') window.setSyncSchool(null, null);
+                }
+            });
+        }
+        
         // Signal to bundle.js that Firebase is ready
         window.dispatchEvent(new CustomEvent('firebase-ready'));
     </script>
