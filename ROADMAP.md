@@ -35,10 +35,13 @@ graph TD
 *   **Convert Simple Scripts:** Converted `src/ui-handlers.js` and `src/saved-schedules.js` from `defer` to `type="module"` script tags — they only set `window.*` functions so they are fully compatible.
 *   **Link External Stylesheet:** Done in Phase 1.
 
-### 🔲 Phase 2b — Remaining
-*   **Rewrite `src/state.js`:** Convert it from a plain `defer` script to a proper ES6 module that exports `State`, `saveState`, `loadState`, `switchClassProgram`, `switchSchoolYear`, etc. This requires the sub-modules (`scheduling.js`, `dragDrop.js`, `importExport.js`) to correctly resolve their `import { State }` calls.
-*   **Retire `src/app.js`:** Replace the monolithic 4000-line `src/app.js` with `src/ui.js` as the active entry point. `src/ui.js` already has correct ES6 imports but is missing a few features (`handleAuthAction`, `openNewSYModal`, `createNewSchoolYear`, teacher modal) that must be migrated first.
-*   **Import Sub-modules in Entry Point:** Once `ui.js` is the entry point, have it explicitly import and initialize `ui-handlers.js`, `saved-schedules.js`, and `nav.js`.
+### ✅ Phase 2b — Completed
+*   **Rewrite `src/state.js`:** Converted from a 518-line plain `defer` script to a proper ES6 module. Uses `Object.defineProperty` getters/setters on `window` to keep `State.workspace`, `State.draggedBlockId`, and all other state properties in sync with `app.js`'s bare global variable references — meaning **`app.js` needed zero changes**. Exports `State`, `saveState`, `loadState`, `switchClassProgram`, `switchSchoolYear`, `getAllSchoolYears`, `registerSchoolYear`. Also exposes `migrateLegacyData` on `window` since `app.js` calls it directly.
+
+### 🔲 Phase 2c — Remaining (Retire app.js Monolith)
+*   **Migrate missing features into `src/ui.js`:** `src/ui.js` is the fully-modular replacement for `app.js` but is currently missing `handleAuthAction`, `openNewSYModal`, `createNewSchoolYear`, and teacher modal handling from `app.js`. These must be migrated before `app.js` can be retired.
+*   **Make `src/ui.js` the entry point:** Once features are migrated, switch `index.html` from `<script defer src="src/app.js">` to `<script type="module" src="src/ui.js">`.
+*   **Remove `src/app.js`:** After verifying `ui.js` is feature-complete, delete the 4000-line monolith.
 
 ---
 
