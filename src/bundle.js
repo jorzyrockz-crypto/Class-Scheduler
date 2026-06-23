@@ -582,8 +582,8 @@ const toggleRippleCascade = (checked) => {
 
 
 // --- BUNDLED FROM: src/scheduling.js ---
-let _showToast = null;
-let _renderAll = null;
+_showToast = null;
+_renderAll = null;
 let _renderResourceLists = null;
 
 const setupScheduling = (deps) => {
@@ -690,7 +690,7 @@ const getLiveStatus = (teacherId) => {
 
 
 // --- BUNDLED FROM: src/importExport.js ---
-let _showToast = null;
+_showToast = null;
 let _setActiveTab = null;
 
 const setupImportExport = (deps) => {
@@ -769,8 +769,8 @@ function setSyncSchool(schoolId, user) {
 window.setSyncSchool = setSyncSchool;
 
 // Dependencies injected from app.js
-let _showToast = null;
-let _renderAll = null;
+_showToast = null;
+_renderAll = null;
 
 const setupCloudSync = (config, token, id, deps) => {
     appId = id;
