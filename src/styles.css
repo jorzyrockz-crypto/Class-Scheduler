@@ -1,116 +1,141 @@
-﻿        .dragging {
-            opacity: 0.3 !important;
-            transform: scale(0.95);
-            cursor: grabbing !important;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
-        .drag-over-active {
-            background-color: rgba(16, 185, 129, 0.08) !important;
-            border: 2px dashed #10b981 !important;
-        }
-        .day-column {
-            min-height: 100px;
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+/* =========================================
+   DRAG & DROP STATES
+   ========================================= */
+.dragging {
+    opacity: 0.3 !important;
+    transform: scale(0.95);
+    cursor: grabbing !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+.drag-over-active {
+    background-color: rgba(16, 185, 129, 0.08) !important;
+    border: 2px dashed #10b981 !important;
+}
+.day-column {
+    min-height: 100px;
+}
 
-        /* Prevent selection and native callouts on touch devices */
-        [draggable="true"], .drag-handle-touch {
-            -webkit-touch-callout: none !important;
-            -webkit-user-select: none !important;
-            -khtml-user-select: none !important;
-            -moz-user-select: none !important;
-            -ms-user-select: none !important;
-            user-select: none !important;
-            touch-action: none !important; 
-        }
+/* =========================================
+   CUSTOM SCROLLBAR
+   ========================================= */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
 
-        /* Active highlight for pressed subject cards */
-        .card-active-highlight {
-            outline: 3px solid #10b981 !important;
-            outline-offset: 1px;
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4) !important;
-        }
+/* =========================================
+   TOUCH DEVICE - PREVENT SELECTION
+   ========================================= */
+/* Prevent selection and native callouts on touch devices */
+[draggable="true"], .drag-handle-touch {
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    -khtml-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    touch-action: none !important;
+}
 
-        /* Highlight for Faculty Directory items matching active criteria */
-        .card-teacher-highlight {
-            outline: 3px solid #10b981 !important;
-            outline-offset: 1px;
-            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3) !important;
-            transform: scale(1.02);
-            z-index: 10;
-        }
+/* =========================================
+   CARD HIGHLIGHTS
+   ========================================= */
+/* Active highlight for pressed subject cards */
+.card-active-highlight {
+    outline: 3px solid #10b981 !important;
+    outline-offset: 1px;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4) !important;
+}
 
-        /* =========================================
-           FORMAL DEP-ED PRINT STYLES - FIXED AUTO-FIT
-           ========================================= */
-        @media print {
-            @page { size: landscape; margin: 10mm; }
-            
-            html, body { 
-                background: white !important; 
-                font-family: 'Times New Roman', Times, serif !important; 
-                color: black !important;
-                width: 100%;
-                height: auto !important; 
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: visible !important;
-                box-sizing: border-box;
-            }
-            
-            header, #individual-selector-bar, #gradelevel-selector-bar, .flex.gap-2.mb-4, .xl\:col-span-1, #custom-toast, #confirm-modal, #resource-modal, #create-modal, #edit-modal, #quick-move-popover, #faculty-panel-container, .print\:hidden, #sidebar-container {
-                display: none !important;
-            }
-            
-            .max-w-\[1500px\] { max-width: none !important; width: 100% !important; display: block !important; margin: 0 !important; padding: 0 !important; }
-            .grid { display: block !important; height: auto !important; gap: 0 !important; }
-            #workspace-container { width: 100% !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; background: transparent !important; display: block !important; }
-            .overflow-x-auto { overflow: visible !important; display: block !important; }
-            
-            table { width: 100% !important; height: auto !important; border-collapse: collapse !important; border: 2px solid black !important; table-layout: fixed !important; margin-bottom: 20px !important; }
-            th, td { border: 1px solid black !important; padding: 1px !important; text-align: center !important; vertical-align: middle !important; overflow: hidden; }
-            th { background-color: white !important; color: black !important; font-size: 10pt !important; padding: 4px !important; font-weight: bold !important; height: auto !important; }
-            td { font-size: 9pt !important; height: 35px !important; }
-            td.p-2 { padding: 0 !important; height: 35px !important; }
-            
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            .print-card {
-                border: none !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                width: 100% !important;
-                height: 100% !important;
-                display: flex !important;
-                flex-direction: column !important;
-                justify-content: center !important;
-                align-items: center !important;
-                min-height: 0 !important;
-                padding: 1px !important;
-            }
-            .print-card-title { font-size: 9pt !important; color: black !important; font-weight: bold !important; margin: 0 !important; font-family: Arial, Helvetica, sans-serif !important; }
-            .print-card-subtitle { font-size: 7.5pt !important; color: black !important; font-weight: normal !important; text-transform: uppercase !important; margin: 0 !important; font-family: Arial, Helvetica, sans-serif !important; }
-            
-            .bg-slate-100\/50, .bg-slate-50\/70 { background-color: white !important; color: black !important; font-weight: bold !important; font-size: 10pt !important; }
-            
-            #print-header { display: flex !important; flex-direction: column; margin-bottom: 10px !important; }
-            #print-footer { display: flex !important; flex-direction: row; margin-top: 10px !important; padding-bottom: 5px !important; page-break-inside: avoid; }
-            
-            .print-logo-img { max-width: 65px; max-height: 65px; object-fit: contain; }
-            .print-header-text p { font-size: 8.5pt !important; line-height: 1.15 !important; margin: 0 !important; }
-            .print-header-text p.school-name { font-size: 10.5pt !important; font-weight: bold !important; margin-top: 2px !important; margin-bottom: 2px !important; }
-            #print-doc-title { font-size: 11pt !important; margin-top: 8px !important; margin-bottom: 2px !important; font-weight: bold !important; }
-        }
+/* Highlight for Teacher Directory items matching active criteria */
+.card-teacher-highlight {
+    outline: 3px solid #10b981 !important;
+    outline-offset: 1px;
+    box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3) !important;
+    transform: scale(1.02);
+    z-index: 10;
+}
 
+/* =========================================
+   ANIMATIONS
+   ========================================= */
+/* Update Modal Pop-In Animation */
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+    70% { opacity: 1; transform: scale(1.02) translateY(0); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-pop-in {
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* =========================================
+   FORMAL DEP-ED PRINT STYLES - FIXED AUTO-FIT
+   ========================================= */
+@media print {
+    @page { size: landscape; margin: 10mm; }
+
+    html, body {
+        background: white !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        color: black !important;
+        width: 100%;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        box-sizing: border-box;
+    }
+
+    header, #individual-selector-bar, #gradelevel-selector-bar, .flex.gap-2.mb-4, .xl\:col-span-1, #custom-toast, #confirm-modal, #resource-modal, #create-modal, #edit-modal, #quick-move-popover, #teacher-panel-container, .print\:hidden, #sidebar-container {
+        display: none !important;
+    }
+
+    .max-w-\[1500px\] { max-width: none !important; width: 100% !important; display: block !important; margin: 0 !important; padding: 0 !important; }
+    .grid { display: block !important; height: auto !important; gap: 0 !important; }
+    #workspace-container { width: 100% !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; background: transparent !important; display: block !important; }
+    .overflow-x-auto { overflow: visible !important; display: block !important; }
+
+    table { width: 100% !important; height: auto !important; border-collapse: collapse !important; border: 2px solid black !important; table-layout: fixed !important; margin-bottom: 20px !important; }
+    th, td { border: 1px solid black !important; padding: 1px !important; text-align: center !important; vertical-align: middle !important; overflow: hidden; }
+    th { background-color: white !important; color: black !important; font-size: 10pt !important; padding: 4px !important; font-weight: bold !important; height: auto !important; }
+    td { font-size: 9pt !important; height: 35px !important; }
+    td.p-2 { padding: 0 !important; height: 35px !important; }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .print-card {
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        min-height: 0 !important;
+        padding: 1px !important;
+    }
+    .print-card-title { font-size: 9pt !important; color: black !important; font-weight: bold !important; margin: 0 !important; font-family: Arial, Helvetica, sans-serif !important; }
+    .print-card-subtitle { font-size: 7.5pt !important; color: black !important; font-weight: normal !important; text-transform: uppercase !important; margin: 0 !important; font-family: Arial, Helvetica, sans-serif !important; }
+
+    .bg-slate-100\/50, .bg-slate-50\/70 { background-color: white !important; color: black !important; font-weight: bold !important; font-size: 10pt !important; }
+
+    #print-header { display: flex !important; flex-direction: column; margin-bottom: 10px !important; }
+    #print-footer { display: flex !important; flex-direction: row; margin-top: 10px !important; padding-bottom: 5px !important; page-break-inside: avoid; }
+
+    .print-logo-img { max-width: 65px; max-height: 65px; object-fit: contain; }
+    .print-header-text p { font-size: 8.5pt !important; line-height: 1.15 !important; margin: 0 !important; }
+    .print-header-text p.school-name { font-size: 10.5pt !important; font-weight: bold !important; margin-top: 2px !important; margin-bottom: 2px !important; }
+    #print-doc-title { font-size: 11pt !important; margin-top: 8px !important; margin-bottom: 2px !important; font-weight: bold !important; }
+}
