@@ -30,9 +30,15 @@ graph TD
 ## 🟡 Phase 2: True ES6 Module Architecture (Medium)
 **Goal:** Migrate the scripts from the global `window` namespace to modular ES6 exports/imports.
 
-*   **Use `type="module"`:** Change script references in `index.html` to module imports (e.g., `<script type="module" src="src/ui.js"></script>`).
-*   **Implement Imports/Exports:** Properly connect the split files (`defaults.js`, `theme.js`, `utils.js`, `storage.js`, `stateMigration.js`, `conflictDiagnostics.js`, `scheduling.js`, `importExport.js`, `cloudSync.js`, `dragDrop.js`, `ui.js`, and `nav.js`) using ES6 `import` and `export` statements.
-*   **Remove Monolith Duplication:** Retire/delete the giant monolithic duplicate functions inside `src/app.js` once modules are fully functional.
+### ✅ Phase 2a — Completed
+*   **External Firebase Module:** Moved the 56-line inline `<script type="module">` Firebase bootstrap from `index.html` into `src/firebase-init.js`.
+*   **Convert Simple Scripts:** Converted `src/ui-handlers.js` and `src/saved-schedules.js` from `defer` to `type="module"` script tags — they only set `window.*` functions so they are fully compatible.
+*   **Link External Stylesheet:** Done in Phase 1.
+
+### 🔲 Phase 2b — Remaining
+*   **Rewrite `src/state.js`:** Convert it from a plain `defer` script to a proper ES6 module that exports `State`, `saveState`, `loadState`, `switchClassProgram`, `switchSchoolYear`, etc. This requires the sub-modules (`scheduling.js`, `dragDrop.js`, `importExport.js`) to correctly resolve their `import { State }` calls.
+*   **Retire `src/app.js`:** Replace the monolithic 4000-line `src/app.js` with `src/ui.js` as the active entry point. `src/ui.js` already has correct ES6 imports but is missing a few features (`handleAuthAction`, `openNewSYModal`, `createNewSchoolYear`, teacher modal) that must be migrated first.
+*   **Import Sub-modules in Entry Point:** Once `ui.js` is the entry point, have it explicitly import and initialize `ui-handlers.js`, `saved-schedules.js`, and `nav.js`.
 
 ---
 
